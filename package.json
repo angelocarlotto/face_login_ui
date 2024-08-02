@@ -9,8 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.19.3",
+    "flask-cors": "^0.0.1",
+    "next": "14.2.5",
     "react": "^18",
+    "react-camera-pro": "^1.4.0",
     "react-dom": "^18",
-    "next": "14.2.5"
+    "react-webcam": "^7.2.0"
   }
 }

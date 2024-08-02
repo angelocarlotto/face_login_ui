@@ -1,95 +1,197 @@
+"use client";
 import Image from "next/image";
 import styles from "./page.module.css";
+import Webcam from "react-webcam";
+import React, { useEffect, useCallback, useState, useRef } from "react";
+const videoConstraints = {
+  width: 1280,
+  height: 720,
+  facingMode: "user",
+};
 
 export default function Home() {
+  const sendPicture = async (e) => {
+    setstatusSubmition("sending....")
+    const input = document.getElementById('file2');
+    
+    let data2 = new FormData();
+    data2.append("key_enviroment","angelo42_env")
+    const createXHR = () => new XMLHttpRequest()
+    for (const file of input.files) {
+      data2.append('files',file,file.name)
+    }
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/recognizeFace", {
+        body:  data2,
+        createXHR,
+        method: "POST",
+        
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      setstatusSubmition("Done")
+      const data = await response.json();
+      setqtdFound(data.qtdFaceDetected);
+      setDataTable(data.faces_know);
+      
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const handleFile = (event) => {
+    //this.setState({ ...this.state, [e.target.name]: e.target.files[0] });
+    console.log(event);
+    if (event.target.files && event.target.files[0]) {
+      setImage2(URL.createObjectURL(event.target.files[0]));
+    }
+  };
+
+  const update_face_name = async (new_name, uuid) => {
+    /*setDataTable(
+      dataTable.map((item) => {
+        if (item.uuid == uuid) {
+          item.name = new_name;
+        }
+        return item;
+      })
+    );
+    */
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:5000/api/update_face_name",
+        {
+          body: JSON.stringify({ uuid, new_name,key_enviroment:"angelo42_env" }),
+
+          method: "POST",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+
+      const data = await response.json();
+      setDataTable(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const recognizeFace = async (imageSrc = None) => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/recognizeFace", {
+        body: JSON.stringify({ face42: imageSrc,key_enviroment:"angelo42_env" }),
+
+        method: "POST",
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+
+      const data = await response.json();
+      setqtdFound(data.qtdFaceDetected);
+      setDataTable(data.faces_know);
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const [dataTable, setDataTable] = useState([]);
+  const [image2, setImage2] = useState();
+  const [statusSubmition, setstatusSubmition] = useState();
+
+  const [image, setImage] = useState();
+  const [qtdFound, setqtdFound] = useState();
+
+  const webcamRef = useRef(null);
+  const capture = useCallback(async () => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    setImage(imageSrc);
+    await recognizeFace(imageSrc);
+  }, [webcamRef]);
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <>
+      <h1>Attendance by Face Login</h1>
+      <Webcam
+        audio={false}
+        height={200}
+        ref={webcamRef}
+        screenshotFormat="image/jpeg"
+        width={300}
+        videoConstraints={videoConstraints}
+      />
+      <br />
+      <button onClick={capture}>
+        Click to know how many faces there are:<h1> {qtdFound}</h1>
+      </button>
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+      <br />
+      <br />
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+      <form
+        action="http://127.0.0.1:5000/api/recognizeFace"
+        method="POST"
+        encType="multipart/form-data"
+      >
+        <input type="file" onChange={handleFile} name="file2"   id="file2"/>
+        <img src={image2} alt="preview" width={200} />
+        {/* <input type="hidden" name="image2" value={image2} /> */}
+        {/* <input type="submit" name="submit2" value="Send pic" /> */}
+      </form>
+      <button onClick={sendPicture}>Send picture:{statusSubmition}</button>
+      <br />
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <br />
+      {image && <Image src={image} alt="screenshot" height={200} width={300} />}
+      <table border={1}>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>uuid</th>
+            <th>face_detected</th>
+            <th>new name</th>
+            <th>qtd</th>
+            <th>first_detected</th>
+            <th>last_detected</th>
+            
+          </tr>
+        </thead>
+        <tbody>
+          {dataTable.length > 0 &&
+            dataTable.sort((a,b)=>new Date(b.last_detected)-new Date(a.last_detected)).map(function (object, i) {
+              return (
+                <>
+                  <tr key={object.short_uuid}>
+                    <td>{i}-{object.index}</td>
+                    <td>{object.short_uuid}</td>
+                    <td><img src={object.encoded64_last_pic} alt={object.last_know_shot} width={50}/></td>
+                    <td>
+                      <input
+                        type="text"
+                        onChange={(e) =>
+                          update_face_name(e.target.value, object.uuid)
+                        }
+                        value={object.name}
+                      />
+                    </td>
+                    <td>{object.qtd}</td>
+                    <td> {object.first_detected}</td>
+                    <td>{object.last_detected}</td>
+                    
+                  </tr>
+                </>
+              ); //<ObjectRow obj={object} key={i} />;
+            })}
+        </tbody>
+      </table>
+    </>
   );
 }
