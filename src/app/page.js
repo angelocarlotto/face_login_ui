@@ -3,7 +3,7 @@ import Image from "next/image";
 import styles from "./page.module.css";
 
 import Webcam from "react-webcam";
-import React, { useEffect, useCallback, useState, useRef } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 const videoConstraints = {
   width: 1280,
   height: 720,
@@ -12,19 +12,36 @@ const videoConstraints = {
 
 export default function Home({ searchParams }) {
   //const router = useRouter();
-  const [enviromentName, setEnviromentName] = useState(searchParams.enviroment_name);
+  const [enviromentName, setEnviromentName] = useState(
+    searchParams.enviroment_name
+  );
   const [searchedTimeOut, setSearchedTimeOut] = useState(null);
   const [dataTable, setDataTable] = useState([]);
   const [image2, setImage2] = useState();
   const [statusSubmition, setstatusSubmition] = useState();
   const [image, setImage] = useState();
+  const [apiIsRunning, setapiIsRunning] = useState(false);
+  const [apiIsRunningMessage, setapiIsRunningMessage] = useState(
+    "your api is NOT running"
+  );
   const [qtdFound, setqtdFound] = useState();
   const [api_url, setapi_url] = useState(searchParams.api_url);
   const webcamRef = useRef(null);
-  
+  useEffect(() => {
+    fetch(`${api_url}/api/hi`).then((response) => {
+      setapiIsRunning(response.ok);
+      if (response.ok) {
+        response.json().then((response) => {
+          console.log(response);
+          setapiIsRunningMessage(response);
+        });
+      }
+    });
+  }, []);
+
   const sendPicture = async (e) => {
     //const { arg1 } = router.query; // 'arg1' will be 'value1'
-    
+
     setstatusSubmition("sending....");
     const input = document.getElementById("file2");
 
@@ -35,7 +52,6 @@ export default function Home({ searchParams }) {
     }
     try {
       const response = await fetch(
-        
         `${api_url}/api/recognizeFace?key_enviroment_url=${enviromentName}`,
         {
           body: data2,
@@ -104,8 +120,9 @@ export default function Home({ searchParams }) {
     );
   };
   const saveDataBase = async () => {
-
-    const response = await fetch(`${api_url}/api/save?key_enviroment_url=${enviromentName}`)
+    const response = await fetch(
+      `${api_url}/api/save?key_enviroment_url=${enviromentName}`
+    );
     if (!response.ok) {
       throw new Error("Failed to fetch data");
     }
@@ -114,8 +131,9 @@ export default function Home({ searchParams }) {
     console.log(data);
   };
   const loadDataBase = async () => {
-
-    const response = await fetch(`${api_url}/api/load?key_enviroment_url=${enviromentName}`)
+    const response = await fetch(
+      `${api_url}/api/load?key_enviroment_url=${enviromentName}`
+    );
     if (!response.ok) {
       throw new Error("Failed to fetch data");
     }
@@ -124,7 +142,6 @@ export default function Home({ searchParams }) {
     console.log(data);
 
     setDataTable(data);
-
   };
   const recognizeFace = async (imageSrc = None) => {
     try {
@@ -165,10 +182,23 @@ export default function Home({ searchParams }) {
   return (
     <>
       <h1>Attendance by Face Login</h1>
+
       <h2>
-        A case of study to create a API usinf python&Flask and a Front End
-        unsing NextJs
+        A case of study to create a API using python+Flask and a Front End using
+        NextJs
       </h2>
+      <h2>API Status:</h2>
+      <p>{apiIsRunning ? <p style={{ color: "green" }}> {apiIsRunningMessage}</p> : <p style={{ color: "red" }}>{apiIsRunningMessage}</p>}</p>
+      {!apiIsRunning && (
+        <>
+          <br></br>{" "}
+          <p style={{ color: "red" }}>
+            on your URL you must have two arguments:api_url( a valid endpoint to
+            your running API) and enviroment_name(any value)
+          </p>
+        </>
+      )}
+
       <div>
         <label>Name of The Enviroment:</label>
         <input
