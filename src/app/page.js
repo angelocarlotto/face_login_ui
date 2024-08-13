@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import ImageNext from "next/image";
 import styles from "./page.module.css";
 
 import Webcam from "react-webcam";
@@ -9,41 +9,45 @@ const videoConstraints = {
   height: 720,
   facingMode: "user",
 };
-
 export default function Home({ searchParams }) {
   //const router = useRouter();
   const [enviromentName, setEnviromentName] = useState(
     searchParams.enviroment_name
   );
   const [searchedTimeOut, setSearchedTimeOut] = useState(null);
+  const [refreshImageTimeOut, setRefreshImageTimeOut] = useState(null);
+  const [refreshImageTimeOutInterval, setRefreshImageTimeOutInterval] =
+    useState(null);
   const [dataTable, setDataTable] = useState([]);
-  const [image2, setImage2] = useState();
+  const [previewFileUploadImage, setPreviewFileUploadImage] = useState();
   const [statusSubmition, setstatusSubmition] = useState();
-  const [image, setImage] = useState();
+  const [webCamImagePreview, setWebCamImagePreview] = useState();
   const [apiIsRunning, setapiIsRunning] = useState(false);
+  const [enableRefreshImageTimer, setEnableRefreshImageTimer] = useState(false);
   const [apiIsRunningMessage, setapiIsRunningMessage] = useState(
     "your api is NOT running"
   );
-  const [qtdFound, setqtdFound] = useState();
+  const [listFacesLastRecognized, setqtdFound] = useState([]);
   const [api_url, setapi_url] = useState(searchParams.api_url);
   const webcamRef = useRef(null);
   useEffect(() => {
-    fetch(`${api_url}/api/hi`).then((response) => {
+    const fetchData = async () => {
+      let response = await fetch(`${api_url}/api/hi`); //.then((response) => {
       setapiIsRunning(response.ok);
       if (response.ok) {
         response.json().then((response) => {
-          console.log(response);
+          //console.log(response);
           setapiIsRunningMessage(response);
         });
       }
-    });
+    };
+
+    fetchData().catch(console.error);
   }, []);
 
   const sendPicture = async (e) => {
-    //const { arg1 } = router.query; // 'arg1' will be 'value1'
-
     setstatusSubmition("sending....");
-    const input = document.getElementById("file2");
+    const input = document.getElementById("imageToRecognize");
 
     let data2 = new FormData();
     const createXHR = () => new XMLHttpRequest();
@@ -64,10 +68,11 @@ export default function Home({ searchParams }) {
       }
       setstatusSubmition("Done");
       const data = await response.json();
-      setqtdFound(data.qtdFaceDetected);
+
+      setqtdFound(data.lastRegonizedFaces);
       setDataTable(data.faces_know);
 
-      console.log(data);
+      //console.log(data);
     } catch (error) {
       console.error(error);
     }
@@ -75,15 +80,15 @@ export default function Home({ searchParams }) {
 
   const handleFile = (event) => {
     //this.setState({ ...this.state, [e.target.name]: e.target.files[0] });
-    console.log(event);
+    //console.log(event);
     if (event.target.files && event.target.files[0]) {
-      setImage2(URL.createObjectURL(event.target.files[0]));
+      setPreviewFileUploadImage(URL.createObjectURL(event.target.files[0]));
     }
   };
 
-  async function newFunction(uuid, new_name) {
+  async function updateFaceName(uuid, new_name) {
     try {
-      console.log(enviromentName);
+     // console.log(enviromentName);
       const response = await fetch(
         `${api_url}/api/update_face_name?key_enviroment_url=${enviromentName}`,
         {
@@ -109,13 +114,26 @@ export default function Home({ searchParams }) {
     }
   }
 
+  useEffect(() => {
+    if (enableRefreshImageTimer)
+      setRefreshImageTimeOut(
+        setInterval(async () => {
+          console.log(
+            `refresh image... interval:${refreshImageTimeOutInterval}`
+          );
+          await capture();
+        }, refreshImageTimeOutInterval)
+      );
+    else clearTimeout(refreshImageTimeOut);
+  }, [enableRefreshImageTimer, refreshImageTimeOutInterval]);
+
   const update_face_name = async (e, new_name, uuid) => {
     clearTimeout(searchedTimeOut);
     let obj = dataTable.find((e) => e.uuid == uuid);
     obj.name = new_name;
     setSearchedTimeOut(
       setTimeout(async () => {
-        await newFunction(uuid, new_name);
+        await updateFaceName(uuid, new_name);
       }, 500)
     );
   };
@@ -128,7 +146,7 @@ export default function Home({ searchParams }) {
     }
 
     const data = await response.json();
-    console.log(data);
+   // console.log(data);
   };
   const loadDataBase = async () => {
     const response = await fetch(
@@ -139,18 +157,18 @@ export default function Home({ searchParams }) {
     }
 
     const data = await response.json();
-    console.log(data);
+    //console.log(data);
 
     setDataTable(data);
   };
   const recognizeFace = async (imageSrc = None) => {
     try {
-      console.log(enviromentName);
+      //console.log(enviromentName);
       const response = await fetch(
         `${api_url}/api/recognizeFace?key_enviroment_url=${enviromentName}`,
         {
           body: JSON.stringify({
-            face42: imageSrc,
+            imageToRecognize: imageSrc,
           }),
 
           method: "POST",
@@ -164,18 +182,68 @@ export default function Home({ searchParams }) {
       }
 
       const data = await response.json();
-      setqtdFound(data.qtdFaceDetected);
+
+      setqtdFound(data.lastRegonizedFaces);
       setDataTable(data.faces_know);
-      console.log(data);
+
+      var c = document.getElementById("myCanvas");
+      var ctx = c.getContext("2d");
+      var image = new Image();
+      image.src = imageSrc;
+      //console.log(data.lastRegonizedFaces);
+
+      image.onload = function () {
+        ctx.reset()
+        data.lastRegonizedFaces.forEach((face) => {
+          ctx.drawImage(this, 0, 0);
+          ctx.font = "30px Arial";
+          ctx.lineWidth = "2";
+          ctx.fillStyle = "red";
+          let obj = data.faces_know.find((e) => e.uuid == face.uuid);
+          //(top, right, bottom, left)
+          //fillRect(x=top, y=left, width= right - left, height= bottom-top)
+          let [top,right,bottom,left]=face.location;
+          ctx.rect(
+            left,
+            top,
+            right - left,
+            bottom - top
+          );
+          ctx.fillText(
+            `${obj.name} - ${obj.qtd}`,
+            left,
+            top
+          );
+        });
+        ctx.stroke();
+      };
     } catch (error) {
       console.error(error);
     }
   };
-
+  function getCursorPosition(canvas, event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    //console.log("x: " + x + " y: " + y, event, canvas);
+    return { x: x, y: y };
+  }
+  const drawPoint = (e) => {
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    ctx.font = "50px Arial";
+    let { x, y } = getCursorPosition(c, e);
+    ctx.strokeText(`(${e.clientX},${e.clientY})`, x, y);
+    ctx.arc(x, y, 20, 0, 2 * Math.PI);
+    ctx.stroke();
+  };
   const capture = useCallback(async () => {
-    console.log(api_url);
-    const imageSrc = webcamRef.current.getScreenshot();
-    setImage(imageSrc);
+    const imageSrc = webcamRef.current.getScreenshot({
+      width: 360,
+      height: 202.5,
+    });
+
+    setWebCamImagePreview(imageSrc);
     await recognizeFace(imageSrc);
   }, [webcamRef]);
 
@@ -187,8 +255,17 @@ export default function Home({ searchParams }) {
         A case of study to create a API using python+Flask and a Front End using
         NextJs
       </h2>
-      <h2>API Status:</h2>
-      <p>{apiIsRunning ? <p style={{ color: "green" }}> {apiIsRunningMessage}</p> : <p style={{ color: "red" }}>{apiIsRunningMessage}</p>}</p>
+      <div style={{ display: "flex" }}>
+        <h2>API Status:</h2>
+        <div
+          style={{
+            color: apiIsRunning ? "green" : "red",
+            alignContent: "center",
+          }}
+        >
+          {apiIsRunningMessage}
+        </div>
+      </div>
       {!apiIsRunning && (
         <>
           <br></br>{" "}
@@ -205,50 +282,124 @@ export default function Home({ searchParams }) {
           type="text"
           value={enviromentName}
           onChange={(e) => {
-            console.log(e.target.value);
             setEnviromentName(e.target.value);
-            console.log(enviromentName);
+           // console.log(enviromentName);
           }}
         />
         <label>{enviromentName}</label>
       </div>
       <Webcam
+        className={styles.video}
         audio={false}
-        height={200}
+        width={360}
         ref={webcamRef}
+        screenshotQuality={1}
+        mirrored={true}
         screenshotFormat="image/jpeg"
-        width={300}
         videoConstraints={videoConstraints}
+        // style={{width:360, height:202.5,  backgroundColor: "red" }}
       />
       <br />
-      <button onClick={saveDataBase}>Save to {enviromentName}</button>
-      <button onClick={loadDataBase}>Load from {enviromentName}</button>
-      <br />
+      <button onClick={saveDataBase}>
+        Save to <strong> {enviromentName}</strong>
+      </button>
+      <button onClick={loadDataBase}>
+        Load from <strong> {enviromentName}</strong>
+      </button>
+      <div style={{ display: "flex" }}>
+        <label htmlFor="setTimerEnable">
+          Set timer {enableRefreshImageTimer ? "true" : "false"}
+        </label>
+
+        <input
+          onChange={(e) => setEnableRefreshImageTimer(e.target.checked)}
+          type="checkbox"
+          name="setTimerEnable"
+          id="setTimerEnable"
+        />
+
+        <div>
+          <input
+            type="range"
+            id="volume"
+            name="volume"
+            min="100"
+            max="2000"
+            step={100}
+            onChange={(e) => setRefreshImageTimeOutInterval(e.target.value)}
+          />
+          <label htmlFor="volume">
+            Refresh Interval:{refreshImageTimeOutInterval}
+          </label>
+        </div>
+      </div>
       <button onClick={capture}>
-        Click to know how many faces there are:<h1> {qtdFound}</h1>
+        Click to know how many faces there are:
+        <h1> {listFacesLastRecognized.length}</h1>
       </button>
 
       <br />
       <br />
 
       <form
-        action="http://127.0.0.1:5001/api/recognizeFace?key_enviroment_url=angelo42_env"
+        action={`${api_url}/api/recognizeFace?key_enviroment_url=${enviromentName}`}
         method="POST"
         encType="multipart/form-data"
       >
-        <input type="file" onChange={handleFile} name="file2" id="file2" />
-        <img src={image2} alt="preview" width={200} />
-        {/* <input type="hidden" name="image2" value={image2} /> */}
+        <input
+          type="file"
+          onChange={handleFile}
+          name="imageToRecognize"
+          id="imageToRecognize"
+          multiple
+        />
+
+        <img
+          className={styles.video}
+          src={previewFileUploadImage}
+          alt="preview"
+          width={360}
+        />
         {/* <input type="submit" name="submit2" value="Send pic" /> */}
       </form>
       <button onClick={sendPicture}>Send picture:{statusSubmition}</button>
       <br />
 
       <br />
-      {image && <Image src={image} alt="screenshot" height={200} width={300} />}
+      {webCamImagePreview && (
+        <div className={styles.image_container}>
+          <ImageNext
+            src={webCamImagePreview}
+            alt="screenshot"
+            height={202.5}
+            width={360}
+            className={styles.video}
+          />
+          {listFacesLastRecognized.map(({uuid,location}) => {
+            let [top,right,bottom,left]=location;
+            let obj= dataTable.find((e) =>( e.uuid == uuid));
+            return (
+              //(top[0], right[1], bottom[2], left[3])
+          //fillRect(x=top, y=left, width= right - left, height= bottom-top)
+              <div key={uuid} className={styles.dynamic_box} style={{ top: `${top}px`,left:`${left}px`,width:`${right-left}px`,height:`${bottom-top}px` }}>
+                {obj.name}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <canvas
+        id="myCanvas"
+        width="360"
+        height="202.5"
+        onClick={drawPoint}
+       // style={{ width: 360, height: 202.5, backgroundColor: "red" }}
+      ></canvas>
+
       <table border={1}>
         <thead>
-          <tr>
+          <tr key={"asd22"}>
             <th>#</th>
             <th>uuid</th>
             <th>face_detected</th>
@@ -266,33 +417,31 @@ export default function Home({ searchParams }) {
               )
               .map(function (object, i) {
                 return (
-                  <>
-                    <tr key={object.short_uuid}>
-                      <td>
-                        {i}-{object.index}
-                      </td>
-                      <td>{object.short_uuid}</td>
-                      <td>
-                        <img
-                          src={object.encoded64_last_pic}
-                          alt={object.last_know_shot}
-                          width={50}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          onChange={(e) =>
-                            update_face_name(e, e.target.value, object.uuid)
-                          }
-                          value={object.name}
-                        />
-                      </td>
-                      <td>{object.qtd}</td>
-                      <td> {object.first_detected}</td>
-                      <td>{object.last_detected}</td>
-                    </tr>
-                  </>
+                  <tr key={object.uuid}>
+                    <td>
+                      {i}-{object.index}
+                    </td>
+                    <td>{object.short_uuid}</td>
+                    <td>
+                      <img
+                        src={object.encoded64_last_pic}
+                        alt={object.last_know_shot}
+                        width={50}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        onChange={(e) =>
+                          update_face_name(e, e.target.value, object.uuid)
+                        }
+                        value={object.name}
+                      />
+                    </td>
+                    <td>{object.qtd}</td>
+                    <td> {object.first_detected}</td>
+                    <td>{object.last_detected}</td>
+                  </tr>
                 ); //<ObjectRow obj={object} key={i} />;
               })}
         </tbody>
