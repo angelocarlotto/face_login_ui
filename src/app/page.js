@@ -44,7 +44,29 @@ export default function Home({ searchParams }) {
 
     fetchData().catch(console.error);
   }, []);
-
+  const downloadCSV = () => {
+    fetch(`${api_url}/api/download_csv?key_enviroment_url=${enviromentName}`)  // URL do endpoint Flask
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erro ao fazer download do arquivo');
+        }
+        return response.blob();  // Converte a resposta para um blob
+      })
+      .then(blob => {
+        // Criar uma URL temporária para o blob
+        const url = window.URL.createObjectURL(blob);
+        // Criar um elemento de âncora (link)
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `data_${enviromentName}.csv`;  // Nome do arquivo para download
+        document.body.appendChild(a);  // Anexa o link ao documento
+        a.click();  // Simula um clique no link
+        a.remove();  // Remove o link do documento
+      })
+      .catch(error => {
+        console.error('Erro:', error);
+      });
+  };
   const sendPicture = async (e) => {
     setstatusSubmition("sending....");
     const input = document.getElementById("imageToRecognize");
@@ -340,6 +362,8 @@ export default function Home({ searchParams }) {
           </label>
         </div>
       </div>
+      <button onClick={downloadCSV}>Download Data TO CSV</button>
+      <br/>
       <button onClick={capture}>
         Click to know how many faces there are:
         <h1> {listFacesLastRecognized.length}</h1>
