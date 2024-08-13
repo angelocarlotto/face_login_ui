@@ -17,14 +17,14 @@ export default function Home({ searchParams }) {
   const [searchedTimeOut, setSearchedTimeOut] = useState(null);
   const [refreshImageTimeOut, setRefreshImageTimeOut] = useState(null);
   const [refreshImageTimeOutInterval, setRefreshImageTimeOutInterval] =
-    useState(null);
+    useState(1000);
   const [dataTable, setDataTable] = useState([]);
   const [previewFileUploadImage, setPreviewFileUploadImage] = useState();
   const [statusSubmition, setstatusSubmition] = useState();
   const [webCamImagePreview, setWebCamImagePreview] = useState();
   const [apiIsRunning, setapiIsRunning] = useState(false);
   const [enableRefreshImageTimer, setEnableRefreshImageTimer] = useState(false);
-  const [apiIsRunningMessage, setapiIsRunningMessage] = useState(
+  const [apiIsRunningMessage, setAPIIsRunningMessage] = useState(
     "your api is NOT running"
   );
   const [listFacesLastRecognized, setqtdFound] = useState([]);
@@ -37,7 +37,7 @@ export default function Home({ searchParams }) {
       if (response.ok) {
         response.json().then((response) => {
           //console.log(response);
-          setapiIsRunningMessage(response);
+          setAPIIsRunningMessage(response);
         });
       }
     };
@@ -88,7 +88,7 @@ export default function Home({ searchParams }) {
 
   async function updateFaceName(uuid, new_name) {
     try {
-     // console.log(enviromentName);
+      // console.log(enviromentName);
       const response = await fetch(
         `${api_url}/api/update_face_name?key_enviroment_url=${enviromentName}`,
         {
@@ -115,17 +115,17 @@ export default function Home({ searchParams }) {
   }
 
   useEffect(() => {
-    if (enableRefreshImageTimer)
-      setRefreshImageTimeOut(
-        setInterval(async () => {
-          console.log(
-            `refresh image... interval:${refreshImageTimeOutInterval}`
-          );
-          await capture();
-        }, refreshImageTimeOutInterval)
-      );
-    else clearTimeout(refreshImageTimeOut);
-  }, [enableRefreshImageTimer, refreshImageTimeOutInterval]);
+    if (enableRefreshImageTimer) {
+      let intervalRef = setInterval(async () => {
+        await capture();
+      }, refreshImageTimeOutInterval);
+      setRefreshImageTimeOut(intervalRef);
+      console.log("enabled");
+    } else {
+      console.log("dis-enabled");
+      clearTimeout(refreshImageTimeOut);
+    }
+  }, [enableRefreshImageTimer]);
 
   const update_face_name = async (e, new_name, uuid) => {
     clearTimeout(searchedTimeOut);
@@ -146,7 +146,7 @@ export default function Home({ searchParams }) {
     }
 
     const data = await response.json();
-   // console.log(data);
+    // console.log(data);
   };
   const loadDataBase = async () => {
     const response = await fetch(
@@ -193,7 +193,7 @@ export default function Home({ searchParams }) {
       //console.log(data.lastRegonizedFaces);
 
       image.onload = function () {
-        ctx.reset()
+        ctx.reset();
         data.lastRegonizedFaces.forEach((face) => {
           ctx.drawImage(this, 0, 0);
           ctx.font = "30px Arial";
@@ -202,18 +202,9 @@ export default function Home({ searchParams }) {
           let obj = data.faces_know.find((e) => e.uuid == face.uuid);
           //(top, right, bottom, left)
           //fillRect(x=top, y=left, width= right - left, height= bottom-top)
-          let [top,right,bottom,left]=face.location;
-          ctx.rect(
-            left,
-            top,
-            right - left,
-            bottom - top
-          );
-          ctx.fillText(
-            `${obj.name} - ${obj.qtd}`,
-            left,
-            top
-          );
+          let [top, right, bottom, left] = face.location;
+          ctx.rect(left, top, right - left, bottom - top);
+          ctx.fillText(`${obj.name} - ${obj.qtd}`, left, top);
         });
         ctx.stroke();
       };
@@ -255,6 +246,22 @@ export default function Home({ searchParams }) {
         A case of study to create a API using python+Flask and a Front End using
         NextJs
       </h2>
+      <h3>Disclaimer:</h3>
+      <p>
+        To this interface works, all you have to do is run this comand line:
+        <p>
+          <code>
+            docker run --rm -p 5001:5000
+            angelocarlotto/face_recognition_api:v0.1
+          </code>
+        </p>
+        <p> and then on your browser go to URL</p>
+        <p>
+          <code>
+            https://face-login-ui.vercel.app/?api_url=http://127.0.0.1:5001&enviroment_name=enviromentNew
+          </code>
+        </p>
+      </p>
       <div style={{ display: "flex" }}>
         <h2>API Status:</h2>
         <div
@@ -283,7 +290,7 @@ export default function Home({ searchParams }) {
           value={enviromentName}
           onChange={(e) => {
             setEnviromentName(e.target.value);
-           // console.log(enviromentName);
+            // console.log(enviromentName);
           }}
         />
         <label>{enviromentName}</label>
@@ -375,13 +382,22 @@ export default function Home({ searchParams }) {
             width={360}
             className={styles.video}
           />
-          {listFacesLastRecognized.map(({uuid,location}) => {
-            let [top,right,bottom,left]=location;
-            let obj= dataTable.find((e) =>( e.uuid == uuid));
+          {listFacesLastRecognized.map(({ uuid, location }) => {
+            let [top, right, bottom, left] = location;
+            let obj = dataTable.find((e) => e.uuid == uuid);
             return (
               //(top[0], right[1], bottom[2], left[3])
-          //fillRect(x=top, y=left, width= right - left, height= bottom-top)
-              <div key={uuid} className={styles.dynamic_box} style={{ top: `${top}px`,left:`${left}px`,width:`${right-left}px`,height:`${bottom-top}px` }}>
+              //fillRect(x=top, y=left, width= right - left, height= bottom-top)
+              <div
+                key={uuid}
+                className={styles.dynamic_box}
+                style={{
+                  top: `${top}px`,
+                  left: `${left}px`,
+                  width: `${right - left}px`,
+                  height: `${bottom - top}px`,
+                }}
+              >
                 {obj.name}
               </div>
             );
@@ -394,7 +410,7 @@ export default function Home({ searchParams }) {
         width="360"
         height="202.5"
         onClick={drawPoint}
-       // style={{ width: 360, height: 202.5, backgroundColor: "red" }}
+        // style={{ width: 360, height: 202.5, backgroundColor: "red" }}
       ></canvas>
 
       <table border={1}>
