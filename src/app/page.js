@@ -78,7 +78,7 @@ export default function Home({ searchParams }) {
     }
     try {
       const response = await fetch(
-        `${api_url}/api/recognizeFace?key_enviroment_url=${enviromentName}`,
+        `${api_url}/api/recognize_face?key_enviroment_url=${enviromentName}`,
         {
           body: data2,
           createXHR,
@@ -187,7 +187,7 @@ export default function Home({ searchParams }) {
     try {
       //console.log(enviromentName);
       const response = await fetch(
-        `${api_url}/api/recognizeFace?key_enviroment_url=${enviromentName}`,
+        `${api_url}/api/recognize_face?key_enviroment_url=${enviromentName}`,
         {
           body: JSON.stringify({
             imageToRecognize: imageSrc,
@@ -269,7 +269,7 @@ export default function Home({ searchParams }) {
         NextJs
       </h2>
       <h3>Disclaimer:</h3>
-      <p>
+      <div>
         To this interface works, all you have to do is run this comand line:
         <p>
           <code>
@@ -283,7 +283,7 @@ export default function Home({ searchParams }) {
             https://face-login-ui.vercel.app/?api_url=http://127.0.0.1:5001&enviroment_name=enviromentNew
           </code>
         </p>
-      </p>
+      </div>
       <div style={{ display: "flex" }}>
         <h2>API Status:</h2>
         <div
@@ -373,7 +373,7 @@ export default function Home({ searchParams }) {
       <br />
 
       <form
-        action={`${api_url}/api/recognizeFace?key_enviroment_url=${enviromentName}`}
+        action={`${api_url}/api/recognize_face?key_enviroment_url=${enviromentName}`}
         method="POST"
         encType="multipart/form-data"
       >
