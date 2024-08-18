@@ -36,7 +36,6 @@ export default function Home({ searchParams }) {
     const fetchData = async () => {
       
       let response = await fetch(`https://api.ipify.org?format=json`); //.then((response) => {
-      setapiIsRunning(response.ok);
       if (response.ok) {
         response.json().then((response) => {
           //console.log(response);
