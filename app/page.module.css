@@ -29,5 +29,5 @@
   height: heigthAdjust; /* Adjust as needed */
   border: 2px solid red; /* Box styling */
   box-sizing: border-box;
-  //transition: all 0.3s ease; /* Makes the box dynamic (smooth transitions) */
+  
 }

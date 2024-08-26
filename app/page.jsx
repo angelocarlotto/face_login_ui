@@ -34,7 +34,7 @@ export default function Home({ searchParams }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      
+
       let response = await fetch(`https://api.ipify.org?format=json`); //.then((response) => {
       if (response.ok) {
         response.json().then((response) => {
@@ -49,7 +49,7 @@ export default function Home({ searchParams }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      
+
       let response = await fetch(`${api_url}/api/hi?ipaddress=${clientIpAddress}`); //.then((response) => {
       setapiIsRunning(response.ok);
       if (response.ok) {
@@ -86,7 +86,7 @@ export default function Home({ searchParams }) {
         console.error('Erro:', error);
       });
   };
-  const sendPicture = async (e,clientIpAddress2) => {
+  const sendPicture = async (e, clientIpAddress2) => {
     setstatusSubmition("sending....");
     const input = document.getElementById("imageToRecognize");
 
@@ -127,7 +127,7 @@ export default function Home({ searchParams }) {
     }
   };
 
-  async function updateFaceName(uuid, new_name,clientIpAddress2) {
+  async function updateFaceName(uuid, new_name, clientIpAddress2) {
     try {
       // console.log(enviromentName);
       const response = await fetch(
@@ -156,25 +156,22 @@ export default function Home({ searchParams }) {
   }
 
   useEffect(() => {
+    clearInterval(refreshImageTimeOut);
     if (enableRefreshImageTimer) {
       let intervalRef = setInterval(async () => {
         await capture(clientIpAddress);
       }, refreshImageTimeOutInterval);
       setRefreshImageTimeOut(intervalRef);
-      console.log("enabled");
-    } else {
-      console.log("dis-enabled");
-      clearTimeout(refreshImageTimeOut);
-    }
-  }, [enableRefreshImageTimer,clientIpAddress]);
+    } 
+  }, [enableRefreshImageTimer, clientIpAddress,refreshImageTimeOutInterval]);
 
-  const update_face_name = async (e, new_name, uuid,clientIpAddress2) => {
+  const update_face_name = async (e, new_name, uuid, clientIpAddress2) => {
     clearTimeout(searchedTimeOut);
     let obj = dataTable.find((e) => e.uuid == uuid);
     obj.name = new_name;
     setSearchedTimeOut(
       setTimeout(async () => {
-        await updateFaceName(uuid, new_name,clientIpAddress2);
+        await updateFaceName(uuid, new_name, clientIpAddress2);
       }, 500)
     );
   };
@@ -202,7 +199,7 @@ export default function Home({ searchParams }) {
 
     setDataTable(data);
   };
-  const recognizeFace = async (imageSrc = None,clientIpAddress2) => {
+  const recognizeFace = async (imageSrc = None, clientIpAddress2) => {
     try {
       //console.log(enviromentName);
       const response = await fetch(
@@ -276,7 +273,7 @@ export default function Home({ searchParams }) {
     });
 
     setWebCamImagePreview(imageSrc);
-    await recognizeFace(imageSrc,clientIpAddress2);
+    await recognizeFace(imageSrc, clientIpAddress2);
   }, [webcamRef]);
 
   return (
@@ -314,7 +311,7 @@ export default function Home({ searchParams }) {
           {apiIsRunningMessage}
         </div>
       </div>
-      <div style={{display:"flex"}}>
+      <div style={{ display: "flex" }}>
         <h2>Client IP Adress:</h2>
         <p>{clientIpAddress}</p>
       </div>
@@ -352,10 +349,10 @@ export default function Home({ searchParams }) {
       // style={{width:360, height:202.5,  backgroundColor: "red" }}
       />
       <br />
-      <button onClick={()=>saveDataBase(clientIpAddress)}>
+      <button onClick={() => saveDataBase(clientIpAddress)}>
         Save to <strong> {enviromentName}</strong>
       </button>
-      <button onClick={()=>loadDataBase(clientIpAddress)}>
+      <button onClick={() => loadDataBase(clientIpAddress)}>
         Load from <strong> {enviromentName}</strong>
       </button>
       <div style={{ display: "flex" }}>
@@ -385,10 +382,10 @@ export default function Home({ searchParams }) {
           </label>
         </div>
       </div>
-      <button onClick={()=>downloadCSV(clientIpAddress)}>Download Data TO CSV</button>
+      <button onClick={() => downloadCSV(clientIpAddress)}>Download Data TO CSV</button>
       <br />
-      <button onClick={async()=>capture(clientIpAddress)} style={{color:"red"}}>
-       ➡️➡️➡️ Click to know how many faces there are:⬅️⬅️⬅️
+      <button onClick={async () => capture(clientIpAddress)} style={{ color: "red" }}>
+        ➡️➡️➡️ Click to know how many faces there are:⬅️⬅️⬅️
         <h1> {listFacesLastRecognized.length}</h1>
       </button>
 
@@ -416,7 +413,7 @@ export default function Home({ searchParams }) {
         />
         {/* <input type="submit" name="submit2" value="Send pic" /> */}
       </form>
-      <button onClick={(e)=>sendPicture(e,clientIpAddress)}>Send picture:{statusSubmition}</button>
+      <button onClick={(e) => sendPicture(e, clientIpAddress)}>Send picture:{statusSubmition}</button>
       <br />
 
       <br />
@@ -433,8 +430,6 @@ export default function Home({ searchParams }) {
             let [top, right, bottom, left] = location;
             let obj = dataTable.find((e) => e.uuid == uuid);
             return (
-              //(top[0], right[1], bottom[2], left[3])
-              //fillRect(x=top, y=left, width= right - left, height= bottom-top)
               <div
                 key={uuid}
                 className={styles.dynamic_box}
@@ -445,7 +440,14 @@ export default function Home({ searchParams }) {
                   height: `${bottom - top}px`,
                 }}
               >
-                {obj.name}
+                <span style={{
+                  color: "red"
+                  , backgroundColor: "white"
+                  , position: "relative"
+
+                  , fontSize: "10px"
+                  , top: -20
+                }}> {obj.name} - {obj.qtd}</span>
               </div>
             );
           })}
@@ -497,7 +499,7 @@ export default function Home({ searchParams }) {
                       <input
                         type="text"
                         onChange={(e) =>
-                          update_face_name(e, e.target.value, object.uuid,clientIpAddress)
+                          update_face_name(e, e.target.value, object.uuid, clientIpAddress)
                         }
                         value={object.name}
                       />
@@ -508,6 +510,7 @@ export default function Home({ searchParams }) {
                     <td>
 
                       <select>
+                        <option>Select...</option>
                         {dataTable.map(function (object, i) {
 
                           return (<option key={i} value={object.short_uuid}> {object.name}-{object.short_uuid}</option>);
