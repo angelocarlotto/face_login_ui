@@ -10,6 +10,7 @@ export default function CheckIn({ searchParams }) {
         "your api is NOT running"
     ); const [previewFileUploadImage, setPreviewFileUploadImage] = useState();
     const [dataTable, setDataTable] = useState([]);
+    const [searchedTimeOut, setSearchedTimeOut] = useState(null);
     const [apiIsRunning, setapiIsRunning] = useState(false);
     const [defaultHigth, setDefaultHigth] = useState(300);
     const [defaultWidth, setDefaultWidth] = useState(400);
@@ -94,8 +95,12 @@ export default function CheckIn({ searchParams }) {
             let capabilities = device.getCapabilities();
             let maxHeight = capabilities.height.max;
             let maxWidth = capabilities.width.max;
-            setDefaultHigth(maxHeight * 0.5);
-            setDefaultWidth(maxWidth * 0.375)
+            let proportion=200/maxWidth;
+            let ratioAux=maxWidth/maxHeight;
+            setImageRatio(ratioAux);
+            setDefaultWidth(maxWidth * proportion*ratioAux);
+            setDefaultHigth(maxHeight * proportion*ratioAux);
+            
         }
         setDeviceId(e.target.value);
     }
@@ -270,7 +275,7 @@ export default function CheckIn({ searchParams }) {
         }
       `}</style>
 
-            <div style={{backgroundColor:"blue", paddingLeft: "3rem", paddingTop: "3rem", paddingRight: "3rem", overflow: "scroll" }}>
+            <div style={{ backgroundColor: "blue", paddingLeft: "3rem", paddingTop: "3rem", paddingRight: "3rem", overflow: "scroll" }}>
                 <h1>Attendance/login by Face Login</h1>
                 <fieldset style={{ width: "100%", backgroundColor: "red" }}>
                     <legend><h1> Instructions</h1></legend>
@@ -318,12 +323,11 @@ export default function CheckIn({ searchParams }) {
                         )}
                     </div>
                 </fieldset>
-                <div style={{ display: "flex", flexDirection: "row", flexGrow: "1", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", flexDirection: "row", gap: "0.2rem", flexGrow: "1", justifyContent: "space-between" }}>
                     <fieldset>
                         <legend><h2>WebCam Monitor</h2></legend>
-                        <div style={{ display: "flex" }}>
+                        <div style={{ display: "flex", gap: "0.2rem", paddingBottom: "1rem" }}>
                             <select onChange={onDeviceChange}>
-                                <option key={-1} value={-1} >Select</option>
                                 {devices.map((device, key) => (
                                     <option key={key} value={device.deviceId}>
                                         {device.label}
@@ -355,13 +359,13 @@ export default function CheckIn({ searchParams }) {
 
                             </div>
                             {webCamImagePreview && (
-                                <div >
+                                <div style={{position:"relative"}} >
                                     <img
                                         src={webCamImagePreview}
                                         alt="screenshot"
                                         height={defaultHigth}
                                         width={defaultWidth}
-                                        style={{ backgroundColor: "blue" }}
+                                        style={{ backgroundColor: "green" }}
                                     />
                                     {listFacesLastRecognized.map(({ uuid, location }) => {
                                         let [top, right, bottom, left] = location;
@@ -370,11 +374,15 @@ export default function CheckIn({ searchParams }) {
                                             <div
                                                 key={uuid}
                                                 className={styles.dynamic_box}
-                                                style={{
+                                                style={
+                                                    
+                                                    {
+                                                    position:"absolute",
                                                     top: `${top}px`,
                                                     left: `${left}px`,
                                                     width: `${right - left}px`,
                                                     height: `${bottom - top}px`,
+                                                
                                                 }}
                                             >
                                                 <span style={{
@@ -392,18 +400,22 @@ export default function CheckIn({ searchParams }) {
                             )}
                         </div>
                     </fieldset>
-                    <fieldset style={{ minWidth: "500px" }}>
+                    <fieldset style={{ minWidth: "30rem" }}>
                         <legend><h2>Controls and Configuration...</h2></legend>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", justifyContent: "space-between" }}>
                             <div style={{ display: "flex", justifyContent: "start" }}>
                                 <label><strong >Api Status:</strong> </label>
                                 <p>status????</p>
                             </div>
+                            {
+                            /* ratio=width/heigth
+                            width=ratio*heigth
+                            height=width/ratio */}
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <label htmlFor="inputDefaultWidth">Default Width x Height</label>
-                                <input id="inputDefaultWidth" type="number" placeholder="0.0.0.0" value={defaultWidth} onChange={(e) => setDefaultWidth(e.target.value)}></input>
+                                <input id="inputDefaultWidth" type="number" placeholder="0.0.0.0" value={defaultWidth} onChange={(e) => {setDefaultWidth( Number(e.target.value).toFixed(2));setDefaultHigth(Number(e.target.value/(imageRatio)).toFixed(2))}}></input>
                                 <label >vs</label>
-                                <input id="inputDefaultHeigth" type="number" placeholder="0.0.0.0" value={defaultHigth} onChange={(e) => setDefaultHigth(e.target.value)}></input>
+                                <input id="inputDefaultHeigth" type="number" placeholder="0.0.0.0" value={defaultHigth} onChange={(e) => {setDefaultHigth(Number(e.target.value).toFixed(2));setDefaultWidth(Number(e.target.value*imageRatio).toFixed(2))}}></input>
                             </div>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <label htmlFor="inputClientID">Client Ip Adress</label>
@@ -420,6 +432,20 @@ export default function CheckIn({ searchParams }) {
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <label htmlFor="inputFrequencyImageRefresh">Frequency Image Refresh</label>
                                 <input id="inputFrequencyImageRefresh" placeholder="41" type="number" value={frequencyRefreshImage} onChange={(e) => setFrequencyRefreshImage(e.target.value)}></input>
+                                <select  onChange={(e) => setFrequencyRefreshImage(1000/e.target.value)}>
+                                    <option value={1}>1fps</option>
+                                    <option value={5}>5fps</option>
+                                    <option value={10}>10fps</option>
+                                    <option value={20}>20fps</option>
+                                    <option value={24}>24fps</option>
+                                    <option value={25}>25fps</option>
+                                    <option value={29}>29fps</option>
+                                    <option value={30}>30fps</option>
+                                    <option value={48}>48fps</option>
+                                    <option value={50}>50fps</option>
+                                    <option value={59}>59fps</option>
+                                    <option value={60}>60fps</option>
+                                </select>
                             </div>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <button onClick={() => saveDataBase(clientIpAddress, enviromentName, api_url)}>Save(Persist the enviroment data on disk)</button>
@@ -428,7 +454,7 @@ export default function CheckIn({ searchParams }) {
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <button>Download CSV report</button>
                             </div>
-                            <fieldset style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+                            <fieldset style={{ width: "100%", display: "flex", gap: "0.2rem", flexDirection: "column" }}>
                                 <legend><h3> Register New User</h3></legend>
                                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                                     <label htmlFor="inputNameNewUser">Name new user</label>
