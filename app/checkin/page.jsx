@@ -381,7 +381,10 @@ export default function CheckIn({ searchParams }) {
                                 Anti spoofing
                             </li>
                             <li>
-                                b
+                                IoT(ESP32) integration
+                            </li>
+                            <li>
+                                capability to make request and a face is recognized
                             </li>
                         </ol>
                     </fieldset>
