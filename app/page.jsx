@@ -163,7 +163,7 @@ export default function Home({ searchParams }) {
       }, refreshImageTimeOutInterval);
       setRefreshImageTimeOut(intervalRef);
     } 
-  }, [enableRefreshImageTimer, clientIpAddress,refreshImageTimeOutInterval]);
+  }, [enableRefreshImageTimer, refreshImageTimeOutInterval]);
 
   const update_face_name = async (e, new_name, uuid, clientIpAddress2) => {
     clearTimeout(searchedTimeOut);

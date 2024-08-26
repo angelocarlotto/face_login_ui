@@ -16,7 +16,7 @@ export default function CheckIn({ searchParams }) {
     const [defaultWidth, setDefaultWidth] = useState(400);
     const [imageRatio, setImageRatio] = useState(null);
     const [listFacesLastRecognized, setqtdFound] = useState([]);
-    const [frequencyRefreshImage, setFrequencyRefreshImage] = useState(41);
+    const [frequencyRefreshImage, setFrequencyRefreshImage] = useState(1000);
     const [timerPrintScreen, setTimerPrintScreen] = useState(null);
     const [startTimer, setStartTimer] = useState(false);
     const [deviceId, setDeviceId] = useState({});
@@ -78,15 +78,14 @@ export default function CheckIn({ searchParams }) {
 
     useEffect(() => {
         clearInterval(timerPrintScreen);
-        setWebCamImagePreview(null)
 
         if (startTimer)
-            setTimerPrintScreen(setInterval(() => {
-                onClickCheckIn();
+            setTimerPrintScreen(setInterval(async () => {
+                await onClickCheckIn(clientIpAddress, enviromentName, api_url);
             }, frequencyRefreshImage))
     }
         ,
-        [startTimer, frequencyRefreshImage]
+        [startTimer, frequencyRefreshImage, clientIpAddress, enviromentName, api_url]
     );
 
     const onDeviceChange = (e) => {
@@ -95,15 +94,16 @@ export default function CheckIn({ searchParams }) {
             let capabilities = device.getCapabilities();
             let maxHeight = capabilities.height.max;
             let maxWidth = capabilities.width.max;
-            let proportion=200/maxWidth;
-            let ratioAux=maxWidth/maxHeight;
+            let proportion = 200 / maxWidth;
+            let ratioAux = maxWidth / maxHeight;
             setImageRatio(ratioAux);
-            setDefaultWidth(maxWidth * proportion*ratioAux);
-            setDefaultHigth(maxHeight * proportion*ratioAux);
-            
+            setDefaultWidth(Number(maxWidth * proportion * ratioAux).toFixed(2));
+            setDefaultHigth(Number(maxHeight * proportion * ratioAux).toFixed(2));
+
         }
         setDeviceId(e.target.value);
     }
+
     const onClickCheckIn = async (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
         const imageSrc = webcamRef.current.getScreenshot({
             width: defaultWidth,
@@ -159,6 +159,34 @@ export default function CheckIn({ searchParams }) {
         );
     };
 
+    async function deleteFace(uuid, clientIpAddressAux, enviromentNameAux, apiURLAux) {
+        try {
+            // console.log(enviromentName);
+            const response = await fetch(
+                `${apiURLAux}/api/delete_face?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`,
+                {
+                    body: JSON.stringify({
+                        uuid,
+
+                    }),
+
+                    method: "DELETE",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                }
+            );
+            if (!response.ok) {
+                throw new Error("Failed to fetch data");
+            }
+
+            const data = await response.json();
+            setDataTable(data);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     async function updateFaceName(uuid, new_name, clientIpAddressAux, enviromentNameAux, apiURLAux) {
         try {
             // console.log(enviromentName);
@@ -186,7 +214,29 @@ export default function CheckIn({ searchParams }) {
             console.error(error);
         }
     }
-
+    const downloadCSV = (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
+        fetch(`${apiURLAux}/api/download_csv?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`)  // URL do endpoint Flask
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao fazer download do arquivo');
+                }
+                return response.blob();  // Converte a resposta para um blob
+            })
+            .then(blob => {
+                // Criar uma URL temporária para o blob
+                const url = window.URL.createObjectURL(blob);
+                // Criar um elemento de âncora (link)
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `data_${enviromentName}.csv`;  // Nome do arquivo para download
+                document.body.appendChild(a);  // Anexa o link ao documento
+                a.click();  // Simula um clique no link
+                a.remove();  // Remove o link do documento
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+            });
+    };
     const saveDataBase = async (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
         const response = await fetch(
             `${apiURLAux}/api/save?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`
@@ -275,54 +325,67 @@ export default function CheckIn({ searchParams }) {
         }
       `}</style>
 
-            <div style={{ backgroundColor: "blue", paddingLeft: "3rem", paddingTop: "3rem", paddingRight: "3rem", overflow: "scroll" }}>
-                <h1>Attendance/login by Face Login</h1>
-                <fieldset style={{ width: "100%", backgroundColor: "red" }}>
-                    <legend><h1> Instructions</h1></legend>
+            <div style={{ backgroundColor: "blue", paddingLeft: "3rem", padding: "3rem", overflow: "scroll" }}>
+                <h1>Smart Attendance by Face Login</h1>
+                <div style={{ display: "flex", flexDirection: "row", gap: "0.2rem", flexGrow: "1", justifyContent: "space-between" }}>
+                    <fieldset style={{ backgroundColor: "red", padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem" }}>
+                        <legend><h1> Instructions</h1></legend>
 
-                    <div>
-                        <strong>
-                            A case of study to create a API using python+Flask and a Front End using
-                            NextJs
-                        </strong>
-                        <h3>Disclaimer:</h3>
                         <div>
-                            To this interface works, all you have to do is run this comand line:
-                            <p>
-                                <code>
-                                    docker run --rm -p 5001:5000
-                                    angelocarlotto/face_recognition_api:latest
-                                </code>
-                            </p>
-                            <p> and then on your browser go to URL</p>
-                            <p>
-                                <code>
-                                    https://face-login-ui.vercel.app/?api_url=http://127.0.0.1:5001&enviroment_name=enviromentNew
-                                </code>
-                            </p>
-                        </div>
-                        <div style={{ display: "flex" }}>
-                            <h2>API Status:</h2>
-                            <div
-                                style={{
-                                    color: apiIsRunning ? "green" : "red",
-                                    alignContent: "center",
-                                }}
-                            >
-                                {apiIsRunningMessage}
-                            </div>
-                        </div>
-                        {!apiIsRunning && (
-                            <>
-                                <br></br>{" "}
-                                <p style={{ color: "red" }}>
-                                    on your URL you must have two arguments:api_url( a valid endpoint to
-                                    your running API) and enviroment_name(any value)
+                            <strong>
+                                A case of study to create a API using python+Flask and a Front End using
+                                NextJs
+                            </strong>
+                            <h3>Disclaimer:</h3>
+                            <div>
+                                To this interface works, all you have to do is run this comand line:
+                                <p>
+                                    <code>
+                                        docker run --rm -p 5001:5000
+                                        angelocarlotto/face_recognition_api:latest
+                                    </code>
                                 </p>
-                            </>
-                        )}
-                    </div>
-                </fieldset>
+                                <p> and then on your browser go to URL</p>
+                                <p>
+                                    <code>
+                                        https://face-login-ui.vercel.app/?api_url=http://127.0.0.1:5001&enviroment_name=enviromentNew
+                                    </code>
+                                </p>
+                            </div>
+                            <div style={{ display: "flex" }}>
+                                <h2>API Status:</h2>
+                                <div
+                                    style={{
+                                        color: apiIsRunning ? "green" : "red",
+                                        alignContent: "center",
+                                    }}
+                                >
+                                    {apiIsRunningMessage}
+                                </div>
+                            </div>
+                            {!apiIsRunning && (
+                                <>
+                                    <br></br>{" "}
+                                    <p style={{ color: "red" }}>
+                                        on your URL you must have two arguments:api_url( a valid endpoint to
+                                        your running API) and enviroment_name(any value)
+                                    </p>
+                                </>
+                            )}
+                        </div>
+                    </fieldset>
+                    <fieldset style={{ minWidth: "20rem", padding: "2rem", backgroundColor: "yellow" }}>
+                        <legend><h1> To Do</h1></legend>
+                        <ol>
+                            <li>
+                                Anti spoofing
+                            </li>
+                            <li>
+                                b
+                            </li>
+                        </ol>
+                    </fieldset>
+                </div>
                 <div style={{ display: "flex", flexDirection: "row", gap: "0.2rem", flexGrow: "1", justifyContent: "space-between" }}>
                     <fieldset>
                         <legend><h2>WebCam Monitor</h2></legend>
@@ -359,7 +422,7 @@ export default function CheckIn({ searchParams }) {
 
                             </div>
                             {webCamImagePreview && (
-                                <div style={{position:"relative"}} >
+                                <div style={{ position: "relative" }} >
                                     <img
                                         src={webCamImagePreview}
                                         alt="screenshot"
@@ -371,19 +434,19 @@ export default function CheckIn({ searchParams }) {
                                         let [top, right, bottom, left] = location;
                                         let obj = dataTable.find((e) => e.uuid == uuid);
                                         return (
-                                            <div
+                                           obj && <div
                                                 key={uuid}
                                                 className={styles.dynamic_box}
                                                 style={
-                                                    
+
                                                     {
-                                                    position:"absolute",
-                                                    top: `${top}px`,
-                                                    left: `${left}px`,
-                                                    width: `${right - left}px`,
-                                                    height: `${bottom - top}px`,
-                                                
-                                                }}
+                                                        position: "absolute",
+                                                        top: `${top}px`,
+                                                        left: `${left}px`,
+                                                        width: `${right - left}px`,
+                                                        height: `${bottom - top}px`,
+
+                                                    }}
                                             >
                                                 <span style={{
                                                     color: "red"
@@ -413,9 +476,9 @@ export default function CheckIn({ searchParams }) {
                             height=width/ratio */}
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <label htmlFor="inputDefaultWidth">Default Width x Height</label>
-                                <input id="inputDefaultWidth" type="number" placeholder="0.0.0.0" value={defaultWidth} onChange={(e) => {setDefaultWidth( Number(e.target.value).toFixed(2));setDefaultHigth(Number(e.target.value/(imageRatio)).toFixed(2))}}></input>
+                                <input id="inputDefaultWidth" type="number" placeholder="any number" value={defaultWidth} onChange={(e) => { setDefaultWidth(Number(e.target.value).toFixed(2)); setDefaultHigth(Number(e.target.value / (imageRatio)).toFixed(2)) }}></input>
                                 <label >vs</label>
-                                <input id="inputDefaultHeigth" type="number" placeholder="0.0.0.0" value={defaultHigth} onChange={(e) => {setDefaultHigth(Number(e.target.value).toFixed(2));setDefaultWidth(Number(e.target.value*imageRatio).toFixed(2))}}></input>
+                                <input id="inputDefaultHeigth" type="number" placeholder="any number" value={defaultHigth} onChange={(e) => { setDefaultHigth(Number(e.target.value).toFixed(2)); setDefaultWidth(Number(e.target.value * imageRatio).toFixed(2)) }}></input>
                             </div>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <label htmlFor="inputClientID">Client Ip Adress</label>
@@ -432,7 +495,7 @@ export default function CheckIn({ searchParams }) {
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <label htmlFor="inputFrequencyImageRefresh">Frequency Image Refresh</label>
                                 <input id="inputFrequencyImageRefresh" placeholder="41" type="number" value={frequencyRefreshImage} onChange={(e) => setFrequencyRefreshImage(e.target.value)}></input>
-                                <select  onChange={(e) => setFrequencyRefreshImage(1000/e.target.value)}>
+                                <select onChange={(e) => setFrequencyRefreshImage(1000 / e.target.value)}>
                                     <option value={1}>1fps</option>
                                     <option value={5}>5fps</option>
                                     <option value={10}>10fps</option>
@@ -452,7 +515,7 @@ export default function CheckIn({ searchParams }) {
                                 <button onClick={() => loadDataBase(clientIpAddress, enviromentName, api_url)}>Load (Load the enviroment data on disk)</button>
                             </div>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <button>Download CSV report</button>
+                                <button onClick={() => downloadCSV(clientIpAddress, enviromentName, api_url)}>Download CSV report</button>
                             </div>
                             <fieldset style={{ width: "100%", display: "flex", gap: "0.2rem", flexDirection: "column" }}>
                                 <legend><h3> Register New User</h3></legend>
@@ -521,7 +584,7 @@ export default function CheckIn({ searchParams }) {
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
-                                                            update_face_name(e, e.target.value, object.uuid, clientIpAddress)
+                                                            update_face_name(e, e.target.value, object.uuid, clientIpAddress, enviromentName, api_url)
                                                         }
                                                         value={object.name}
                                                     />
@@ -539,28 +602,16 @@ export default function CheckIn({ searchParams }) {
                                                         })
                                                         }
                                                     </select>
-                                                    <button>Delete</button>
+
                                                 </td>
+                                                <td> <button onClick={async (e) =>
+                                                    await deleteFace(object.uuid, clientIpAddress, enviromentName, api_url)
+                                                }>Delete</button></td>
                                             </tr>
                                         ); //<ObjectRow obj={object} key={i} />;
                                     })}
                         </tbody>
-                        {/* <tbody>
-                            <tr>
-                                <td >s</td>
-                                <td >b</td>
-                                <td> <img src="#" alt="croped image" /> </td>
-                                <td><input type="text" /></td>
-                                <td>c</td>
-                                <td>c</td>
-                                <td>c</td>
-                                <td> <select>
-                                    <option>Select...</option>
-                                </select>
-                                </td>
-                                <td><button>Delete</button></td>
-                            </tr>
-                        </tbody> */}
+
                         <tfoot>
 
                         </tfoot>
