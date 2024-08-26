@@ -386,6 +386,12 @@ export default function CheckIn({ searchParams }) {
                             <li>
                                 capability to make request and a face is recognized
                             </li>
+                            <li>
+                                load data from server on page enter/accessed
+                            </li>
+                            <li>
+                                persist data autoside container, so data not lost when constainer is shutdown
+                            </li>
                         </ol>
                     </fieldset>
                 </div>
