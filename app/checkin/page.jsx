@@ -9,6 +9,9 @@ export default function CheckIn({ searchParams }) {
     const [apiIsRunningMessage, setAPIIsRunningMessage] = useState(
         "your api is NOT running"
     ); const [previewFileUploadImage, setPreviewFileUploadImage] = useState();
+
+    const [nameNewFace, setNameNewFace] = useState(null);
+    const [statusSubmition, setstatusSubmition] = useState();
     const [dataTable, setDataTable] = useState([]);
     const [searchedTimeOut, setSearchedTimeOut] = useState(null);
     const [apiIsRunning, setapiIsRunning] = useState(false);
@@ -114,7 +117,7 @@ export default function CheckIn({ searchParams }) {
         await recognizeFace(imageSrc, clientIpAddressAux, enviromentNameAux, apiURLAux);
     }
 
-    const sendPicture = async (e, clientIpAddressAux, enviromentNameAux, apiURLAux) => {
+    const sendPicture = async (e, clientIpAddressAux, enviromentNameAux, apiURLAux, nameNewFaceAux) => {
         setstatusSubmition("sending....");
         const input = document.getElementById("imageToRecognize");
 
@@ -123,6 +126,8 @@ export default function CheckIn({ searchParams }) {
         for (const file of input.files) {
             data2.append("files", file, file.name);
         }
+
+        data2.append("nameNewFace", nameNewFaceAux)
         try {
             const response = await fetch(
                 `${apiURLAux}/api/recognize_face?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`,
@@ -240,7 +245,7 @@ export default function CheckIn({ searchParams }) {
     const saveDataBase = async (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
         const response = await fetch(
             `${apiURLAux}/api/save?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`
-        );
+            , { method: "POST" });
         if (!response.ok) {
             throw new Error("Failed to fetch data");
         }
@@ -392,6 +397,12 @@ export default function CheckIn({ searchParams }) {
                             <li>
                                 persist data autoside container, so data not lost when constainer is shutdown
                             </li>
+                            <li>
+                                Merge faces, so several faces become one
+                            </li>
+                            <li>
+                                QrCode + Self registration
+                            </li>
                         </ol>
                     </fieldset>
                 </div>
@@ -443,7 +454,7 @@ export default function CheckIn({ searchParams }) {
                                         let [top, right, bottom, left] = location;
                                         let obj = dataTable.find((e) => e.uuid == uuid);
                                         return (
-                                           obj && <div
+                                            obj && <div
                                                 key={uuid}
                                                 className={styles.dynamic_box}
                                                 style={
@@ -479,10 +490,6 @@ export default function CheckIn({ searchParams }) {
                                 <label><strong >Api Status:</strong> </label>
                                 <p>status????</p>
                             </div>
-                            {
-                            /* ratio=width/heigth
-                            width=ratio*heigth
-                            height=width/ratio */}
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <label htmlFor="inputDefaultWidth">Default Width x Height</label>
                                 <input id="inputDefaultWidth" type="number" placeholder="any number" value={defaultWidth} onChange={(e) => { setDefaultWidth(Number(e.target.value).toFixed(2)); setDefaultHigth(Number(e.target.value / (imageRatio)).toFixed(2)) }}></input>
@@ -530,11 +537,11 @@ export default function CheckIn({ searchParams }) {
                                 <legend><h3> Register New User</h3></legend>
                                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                                     <label htmlFor="inputNameNewUser">Name new user</label>
-                                    <input id="inputNameNewUser" placeholder="name new user"></input>
+                                    <input id="inputNameNewUser" value={nameNewFace} onChange={(e) => setNameNewFace(e.target.value)} placeholder="name new user"></input>
                                 </div>
-                                <input type="file" onChange={(e) => setPreviewFileUploadImage(URL.createObjectURL(e.target.files[0]))} multiple></input>
+                                <input type="file" id="imageToRecognize" onChange={(e) => setPreviewFileUploadImage(URL.createObjectURL(e.target.files[0]))} multiple></input>
                                 <img alt="preview image" src={previewFileUploadImage} height={defaultHigth} width={defaultHigth} />
-                                <button>Update</button>
+                                <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)}>Register New:{statusSubmition}</button>
                             </fieldset>
 
                             <Canvas
