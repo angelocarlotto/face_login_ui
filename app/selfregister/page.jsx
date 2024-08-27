@@ -53,7 +53,7 @@ export default function SelfRegistration({ searchParams }) {
             }
             else {
                 const data = await response.json();
-                setstatusSubmition("Done");
+                setstatusSubmition(data.lastRegonizedFaces.length>0?"Sucess on registration":"Please try Again. Registration not completed.");
                 setListFacesLastRecognized(data.lastRegonizedFaces);
                 setDataTable(data.faces_know);
             }
