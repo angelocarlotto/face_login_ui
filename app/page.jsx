@@ -13,7 +13,7 @@ export default function CheckIn({ searchParams }) {
     const { Canvas } = useQRCode();
     const [apiIsRunningMessage, setAPIIsRunningMessage] = useState(
         "your api is NOT running"
-    ); const [previewFileUploadImage, setPreviewFileUploadImage] = useState();
+    ); 
     let controller = new AbortController();
 
     const [nameNewFace, setNameNewFace] = useState("");
@@ -26,7 +26,7 @@ export default function CheckIn({ searchParams }) {
     const [defaultHigth, setDefaultHigth] = useState(300);
     const [defaultWidth, setDefaultWidth] = useState(400);
     const [imageRatio, setImageRatio] = useState(null);
-    const [listFacesLastRecognized, setqtdFound] = useState([]);
+    const [listFacesLastRecognized, setListFacesLastRecognized] = useState([]);
     const [frequencyRefreshImage, setFrequencyRefreshImage] = useState(1000);
     const [timerPrintScreen, setTimerPrintScreen] = useState(null);
     const [startTimer, setStartTimer] = useState(false);
@@ -174,7 +174,7 @@ export default function CheckIn({ searchParams }) {
             setstatusSubmition("Done");
             const data = await response.json();
 
-            setqtdFound(data.lastRegonizedFaces);
+            setListFacesLastRecognized(data.lastRegonizedFaces);
             setDataTable(data.faces_know);
 
             //console.log(data);
@@ -369,7 +369,7 @@ export default function CheckIn({ searchParams }) {
             else {
                 const data = await response.json();
 
-                setqtdFound(data.lastRegonizedFaces);
+                setListFacesLastRecognized(data.lastRegonizedFaces);
                 setDataTable(data.faces_know);
             }
 
@@ -473,13 +473,14 @@ export default function CheckIn({ searchParams }) {
                             <li>
                                 Automatic recognized faces based on a interval of time
                             </li>
+                            <li>On the groupoing, show all first pictures</li>
                         </ol>
                     </fieldset>
                     <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
                         <legend><h1> To Do/Road Map</h1></legend>
                         <ol>
-                            <li>On the groupoing, show all first pictures</li>
                             <li>Improve self register</li>
+                            <li>Manage group os faces during a delition. When delete the main face, should delete the group or reupdate the childs to be on its own uuid principal_uuid.</li>
                             <li>Order result</li>
                             <li>Show date and time on result table</li>
 
@@ -552,6 +553,17 @@ export default function CheckIn({ searchParams }) {
                                     />
 
                                 </div>
+                                <fieldset style={{ width: "100%", display: "flex", gap: "0.2rem", flexDirection: "column" }}>
+                                    <legend><h3> Register New User</h3></legend>
+                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                        <label htmlFor="inputNameNewUser">Name new user</label>
+                                        <input id="inputNameNewUser" value={nameNewFace} onChange={(e) => setNameNewFace(e.target.value)} placeholder="name new user"></input>
+                                    </div>
+                                    <input type="file" id="imageToRecognize" onChange={(e) => { setWebCamImagePreview(URL.createObjectURL(e.target.files[0]));  }} multiple></input>
+                                    {/* <img alt="preview image" src={previewFileUploadImage} height={defaultHigth} width={defaultHigth} /> */}
+                                    <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)}>Register New:{statusSubmition}</button>
+                                </fieldset>
+
                                 {webCamImagePreview && (
                                     <div style={{ position: "relative" }} >
                                         <img
@@ -649,19 +661,10 @@ export default function CheckIn({ searchParams }) {
                                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                                     <button onClick={() => downloadCSV(clientIpAddress, enviromentName, api_url)}>Download CSV report</button>
                                 </div>
-                                <fieldset style={{ width: "100%", display: "flex", gap: "0.2rem", flexDirection: "column" }}>
-                                    <legend><h3> Register New User</h3></legend>
-                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                        <label htmlFor="inputNameNewUser">Name new user</label>
-                                        <input id="inputNameNewUser" value={nameNewFace} onChange={(e) => setNameNewFace(e.target.value)} placeholder="name new user"></input>
-                                    </div>
-                                    <input type="file" id="imageToRecognize" onChange={(e) => { setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); setPreviewFileUploadImage(URL.createObjectURL(e.target.files[0])); }} multiple></input>
-                                    <img alt="preview image" src={previewFileUploadImage} height={defaultHigth} width={defaultHigth} />
-                                    <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)}>Register New:{statusSubmition}</button>
-                                </fieldset>
+                               
 
                                 <Canvas
-                                    text={`https://${window.location.host}/checkin?api_url=${api_url}&enviroment_name=${enviromentName}`}
+                                    text={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}
                                     options={{
                                         errorCorrectionLevel: 'M',
                                         margin: 3,
