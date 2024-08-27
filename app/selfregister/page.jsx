@@ -30,6 +30,7 @@ export default function SelfRegistration({ searchParams }) {
     const recognizeFace = async (imageSrc = None, clientIpAddressAux, enviromentNameAux, apiURLAux,nameNewFaceAux) => {
         try {
             setqtdRequestes(prev => prev + 1);
+            setstatusSubmition("sending....");
             const response = await fetch(
                 `${apiURLAux}/api/recognize_face?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`,
                 {
@@ -48,16 +49,18 @@ export default function SelfRegistration({ searchParams }) {
             setqtdResponses(prev => prev + 1);
             if (!response.ok) {
                 //throw new Error("Failed to fetch data");
+                setstatusSubmition("error");
             }
             else {
                 const data = await response.json();
-
+                setstatusSubmition("Done");
                 setListFacesLastRecognized(data.lastRegonizedFaces);
                 setDataTable(data.faces_know);
             }
 
         } catch (error) {
             console.error(error);
+            setstatusSubmition("catch error");
         }
     };
     const sendPicture = async (e, clientIpAddressAux, enviromentNameAux, apiURLAux, nameNewFaceAux) => {
@@ -83,7 +86,7 @@ export default function SelfRegistration({ searchParams }) {
             );
             setqtdResponses(prev => prev + 1);
             if (!response.ok) {
-                throw new Error("Failed to fetch data");
+                setstatusSubmition("error");
             }
             setstatusSubmition("Done");
             const data = await response.json();
@@ -94,6 +97,7 @@ export default function SelfRegistration({ searchParams }) {
             //console.log(data);
         } catch (error) {
             console.error(error);
+            setstatusSubmition("catch error");
         }
     };
 
@@ -189,8 +193,11 @@ export default function SelfRegistration({ searchParams }) {
                                 </div>
                                 <input type="file" id="imageToRecognize" onChange={(e) => { setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); }} multiple></input>
                                 <div style={{ display: "flex", gap: "1rem" }}>
-                                    <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={!webCamImagePreview}>Register New From File:{statusSubmition}</button>
+                                    <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={!webCamImagePreview}>Register New From File</button>
                                     <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url,nameNewFace)}>Register New From Web Cam</button>
+                                </div>
+                                <div>
+                                    <h1>{statusSubmition}</h1>
                                 </div>
                             </fieldset>
 
