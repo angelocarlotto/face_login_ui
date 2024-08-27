@@ -393,7 +393,7 @@ export default function CheckIn({ searchParams }) {
                                 NextJs
                             </p>
                             <p>
-                                The best case cenario to use this aplication is: adults, one person at a time, no adorments on the face, front-facing fotos
+                                The best case cenario to use this aplication is: adults, one person at a time, no adorments on the face, front-facing fotos, use low frame rate, do not manage faces while automatic is activated(deactivate automatic befor manage faces)
                             </p>
                             <h3>Disclaimer:</h3>
                             <div>
@@ -609,17 +609,19 @@ export default function CheckIn({ searchParams }) {
                                 <input id="inputFrequencyImageRefresh" placeholder="41" type="number" value={frequencyRefreshImage} onChange={(e) => setFrequencyRefreshImage(e.target.value)}></input>
                                 <select onChange={(e) => setFrequencyRefreshImage(1000 / e.target.value)}>
                                     <option value={1}>1fps</option>
+                                    <option value={3}>3fps</option>
                                     <option value={5}>5fps</option>
+                                    <option value={7}>7fps</option>
                                     <option value={10}>10fps</option>
-                                    <option value={20}>20fps</option>
-                                    <option value={24}>24fps</option>
-                                    <option value={25}>25fps</option>
-                                    <option value={29}>29fps</option>
-                                    <option value={30}>30fps</option>
-                                    <option value={48}>48fps</option>
-                                    <option value={50}>50fps</option>
-                                    <option value={59}>59fps</option>
-                                    <option value={60}>60fps</option>
+                                    <option value={20} disabled>20fps</option>
+                                    <option value={24} disabled>24fps</option>
+                                    <option value={25} disabled>25fps</option>
+                                    <option value={29} disabled>29fps</option>
+                                    <option value={30} disabled>30fps</option>
+                                    <option value={48} disabled>48fps</option>
+                                    <option value={50} disabled>50fps</option>
+                                    <option value={59} disabled>59fps</option>
+                                    <option value={60} disabled>60fps</option>
                                 </select>
                             </div>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
