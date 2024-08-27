@@ -637,49 +637,6 @@ export default function CheckIn({ searchParams }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {/* {dataTable.length > 0 &&
-                                Map.groupBy(dataTable, ({ pricipal_uuid }) => pricipal_uuid).forEach((value, key, array) => {
-                                    let object = dataTable.find((face) => face.uuid == key);
-
-                                    <tr key={object.uuid}>
-                                        <td>
-                                            {object.index}
-                                        </td>
-                                        <td>{object.short_uuid}</td>
-                                        <td>
-                                            <img
-                                                src={object.encoded64_last_pic}
-                                                alt={object.last_know_shot}
-                                                width={50}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                onChange={(e) =>
-                                                    update_face_name(e, e.target.value, object.uuid, clientIpAddress, enviromentName, api_url)
-                                                }
-                                                value={object.name}
-                                            />
-                                        </td>
-                                        <td>{object.qtd}</td>
-                                        <td> {object.first_detected}</td>
-                                        <td>{object.last_detected}</td>
-                                        <td>
-                                            <select defaultValue={object.pricipal_uuid} onChange={async (e) => await mergeTwoFaces(e, object.uuid, clientIpAddress, enviromentName, api_url)}>
-                                                <option >Select...</option>
-                                                {dataTable.filter((e) => e.uuid != object.uuid).map(function (objectAux, i) {
-                                                    return (<option key={objectAux.uuid} value={objectAux.uuid}> {objectAux.name}-{objectAux.short_uuid}</option>);
-                                                })
-                                                }
-                                            </select>
-                                        </td>
-                                        <td> <button onClick={async (e) =>
-                                            await deleteFace(object.uuid, clientIpAddress, enviromentName, api_url)
-                                        }>Delete</button></td>
-                                    </tr>
-                                })
-                            } */}
                             {dataTable.length > 0 && (<>{
                                 new Set(dataTable.map(e => e.pricipal_uuid)).keys().toArray().map((key, i, a) => {
                                     let object = dataTable.find((face) => face.uuid == key);
@@ -705,7 +662,7 @@ export default function CheckIn({ searchParams }) {
                                     return (
                                         <tr key={object.uuid}>
                                             <td>
-                                                 {i}-{object.index} 
+                                                {i}-{object.index}
                                             </td>
                                             <td>{object.short_uuid}</td>
                                             <td>
@@ -742,54 +699,10 @@ export default function CheckIn({ searchParams }) {
                                             }>Delete</button></td>
 
                                         </tr>
-                                    ); //<ObjectRow obj={object} key={i} />;
+                                    );
                                 })
                             }</>)}
-                            {/* {dataTable.length > 0 && 
-                                dataTable.sort(
-                                        (a, b) => new Date(b.last_detected) - new Date(a.last_detected)
-                                    )
-                                    .map(function (object, i) {
-                                        return (
-                                            <tr key={object.uuid}>
-                                                <td>
-                                                    {i}-{object.index}
-                                                </td>
-                                                <td>{object.short_uuid}</td>
-                                                <td>
-                                                    <img
-                                                        src={object.encoded64_last_pic}
-                                                        alt={object.last_know_shot}
-                                                        width={50}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            update_face_name(e, e.target.value, object.uuid, clientIpAddress, enviromentName, api_url)
-                                                        }
-                                                        value={object.name}
-                                                    />
-                                                </td>
-                                                <td>{object.qtd}</td>
-                                                <td> {object.first_detected}</td>
-                                                <td>{object.last_detected}</td>
-                                                <td>
-                                                    <select defaultValue={object.pricipal_uuid} onChange={async (e) => await mergeTwoFaces(e, object.uuid, clientIpAddress, enviromentName, api_url)}>
-                                                        <option >Select...</option>
-                                                        {dataTable.filter((e) => e.uuid != object.uuid).map(function (objectAux, i) {
-                                                            return (<option key={objectAux.uuid} value={objectAux.uuid}> {objectAux.name}-{objectAux.short_uuid}</option>);
-                                                        })
-                                                        }
-                                                    </select>
-                                                </td>
-                                                <td> <button onClick={async (e) =>
-                                                    await deleteFace(object.uuid, clientIpAddress, enviromentName, api_url)
-                                                }>Delete</button></td>
-                                            </tr>
-                                        ); //<ObjectRow obj={object} key={i} />;
-                                    })} */}
+
                         </tbody>
 
                         <tfoot>
