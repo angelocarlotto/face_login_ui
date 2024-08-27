@@ -12,6 +12,7 @@ export default function SelfRegistration({ searchParams }) {
     const webcamRef = useRef(null);
     const [webCamImagePreview, setWebCamImagePreview] = useState();
     const [clientIpAddress, setClientIpAddress] = useState('');
+    const [fileLoaded, setFileLoaded] = useState(false);
     const [listFacesLastRecognized, setListFacesLastRecognized] = useState([]);
     const [deviceId, setDeviceId] = useState({});
     const [dataTable, setDataTable] = useState([]);
@@ -193,10 +194,10 @@ export default function SelfRegistration({ searchParams }) {
                                     <label htmlFor="inputNameNewUser">Name new user</label>
                                     <input id="inputNameNewUser" value={nameNewFace} onChange={(e) => setNameNewFace(e.target.value)} placeholder="name new user"></input>
                                 </div>
-                                <input type="file" id="imageToRecognize" onChange={(e) => { setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); }} multiple></input>
+                                <input type="file" id="imageToRecognize" onChange={(e) => {setFileLoaded(true); setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); }} multiple></input>
                                 <div style={{ display: "flex", gap: "1rem" }}>
-                                    <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={!webCamImagePreview}>Register New From File</button>
-                                    <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url,nameNewFace)}>Register New From Web Cam</button>
+                                    <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={!fileLoaded || nameNewFace.trim().length==0}>Register New From File</button>
+                                    <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url,nameNewFace)} disabled={nameNewFace.trim().length>0}>Register New From Web Cam</button>
                                 </div>
                                 <div>
                                     <h1>{statusSubmition}</h1>

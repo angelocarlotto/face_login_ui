@@ -18,6 +18,8 @@ export default function CheckIn({ searchParams }) {
 
     const [nameNewFace, setNameNewFace] = useState("");
     const [qtdRequestes, setqtdRequestes] = useState(0);
+    const [fileLoaded, setFileLoaded] = useState(false);
+    
     const [qtdResponses, setqtdResponses] = useState(0);
     const [statusSubmition, setstatusSubmition] = useState();
     const [dataTable, setDataTable] = useState([]);
@@ -146,6 +148,42 @@ export default function CheckIn({ searchParams }) {
         await recognizeFace(imageSrc, clientIpAddressAux, enviromentNameAux, apiURLAux);
     }
 
+    const recognizeFace = async (imageSrc = None, clientIpAddressAux, enviromentNameAux, apiURLAux, nameNewFaceAux) => {
+        try {
+            setqtdRequestes(prev => prev + 1);
+            setstatusSubmition("sending....");
+            const response = await fetch(
+                `${apiURLAux}/api/recognize_face?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`,
+                {
+                    body: JSON.stringify({
+                        imageToRecognize: imageSrc,
+                        nameNewFace: nameNewFaceAux
+                    }),
+
+                    method: "POST",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                    signal: controller.signal
+                }
+            );
+            setqtdResponses(prev => prev + 1);
+            if (!response.ok) {
+                //throw new Error("Failed to fetch data");
+                setstatusSubmition("error");
+            }
+            else {
+                const data = await response.json();
+                setstatusSubmition(data.lastRegonizedFaces.length > 0 ? "Sucess on registration" : "Please try Again. Registration not completed.");
+                setListFacesLastRecognized(data.lastRegonizedFaces);
+                setDataTable(data.faces_know);
+            }
+
+        } catch (error) {
+            console.error(error);
+            setstatusSubmition("catch error");
+        }
+    };
     const sendPicture = async (e, clientIpAddressAux, enviromentNameAux, apiURLAux, nameNewFaceAux) => {
         setstatusSubmition("sending....");
         const input = document.getElementById("imageToRecognize");
@@ -169,7 +207,7 @@ export default function CheckIn({ searchParams }) {
             );
             setqtdResponses(prev => prev + 1);
             if (!response.ok) {
-                throw new Error("Failed to fetch data");
+                setstatusSubmition("error");
             }
             setstatusSubmition("Done");
             const data = await response.json();
@@ -177,12 +215,14 @@ export default function CheckIn({ searchParams }) {
             setListFacesLastRecognized(data.lastRegonizedFaces);
             setDataTable(data.faces_know);
 
+            setstatusSubmition(data.lastRegonizedFaces.length > 0 ? "Sucess on registration" : "Please try Again. Registration not completed.");
+
             //console.log(data);
         } catch (error) {
             console.error(error);
+            setstatusSubmition("catch error");
         }
     };
-
 
 
     async function deleteFace(uuid, clientIpAddressAux, enviromentNameAux, apiURLAux) {
@@ -330,7 +370,10 @@ export default function CheckIn({ searchParams }) {
 
         setDataTable(data);
     };
+    useEffect(() => {
 
+        loadDataBaseFromMemory(clientIpAddress, enviromentName, api_url)
+    }, [])
     const loadDataBaseFromMemory = async (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
         setqtdRequestes(prev => prev + 1);
         const response = await fetch(
@@ -345,38 +388,7 @@ export default function CheckIn({ searchParams }) {
 
         setDataTable(data);
     };
-    const recognizeFace = async (imageSrc = None, clientIpAddressAux, enviromentNameAux, apiURLAux) => {
-        try {
-            setqtdRequestes(prev => prev + 1);
-            const response = await fetch(
-                `${apiURLAux}/api/recognize_face?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`,
-                {
-                    body: JSON.stringify({
-                        imageToRecognize: imageSrc,
-                    }),
 
-                    method: "POST",
-                    headers: {
-                        "Content-type": "application/json; charset=UTF-8",
-                    },
-                    signal: controller.signal
-                }
-            );
-            setqtdResponses(prev => prev + 1);
-            if (!response.ok) {
-                //throw new Error("Failed to fetch data");
-            }
-            else {
-                const data = await response.json();
-
-                setListFacesLastRecognized(data.lastRegonizedFaces);
-                setDataTable(data.faces_know);
-            }
-
-        } catch (error) {
-            console.error(error);
-        }
-    };
 
 
     return (
@@ -393,7 +405,7 @@ export default function CheckIn({ searchParams }) {
             <div style={{ backgroundColor: "gray", paddingLeft: "3rem", padding: "3rem", overflow: "scroll" }}>
                 <h1>Smart Attendance by Face Login</h1>
                 <div style={{ display: "flex", flexDirection: "row", gap: "0.2rem", flexGrow: "1", justifyContent: "space-between" }}>
-                    <fieldset style={{ backgroundColor: "red", padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem" }}>
+                    <fieldset style={{ padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem" }}>
                         <legend><h1> Instructions</h1></legend>
 
                         <div>
@@ -474,25 +486,27 @@ export default function CheckIn({ searchParams }) {
                                 Automatic recognized faces based on a interval of time
                             </li>
                             <li>On the groupoing, show all first pictures</li>
+                            <li>Improve self register</li>
+                            <li>
+                                QrCode + Self registration
+                            </li>
+                            <li>
+                                load data from server when client  enter/accessed the page
+                            </li>
                         </ol>
                     </fieldset>
                     <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
                         <legend><h1> To Do/Road Map</h1></legend>
                         <ol>
-                            <li>Improve self register</li>
-                            <li>Manage group os faces during a delition. When delete the main face, should delete the group or reupdate the childs to be on its own uuid principal_uuid.</li>
-                            <li>Order result</li>
-                            <li>Show date and time on result table</li>
 
-                            <li>
-                                load data from server on page enter/accessed
-                            </li>
                             <li>
                                 Ability to deal with any king of images others then JPEG
                             </li>
-                            <li>
-                                QrCode + Self registration
-                            </li>
+
+                            <li>Manage group os faces during a delition. When delete the main face, should delete the group or reupdate the childs to be on its own uuid principal_uuid.</li>
+                            <li>Order result based on date last seen</li>
+                            <li>Show date and time on result table</li>
+
                             <li>
                                 persist data autoside container, so data not lost when constainer is shutdown
                             </li>
@@ -500,10 +514,10 @@ export default function CheckIn({ searchParams }) {
                                 Anti spoofing
                             </li>
                             <li>
-                                IoT(ESP32) integration
+                                IoT(ESP32) integration (based on web hook)
                             </li>
                             <li>
-                                capability to make request always a face is recognized
+                                capability to make request always a face is recognized ( Web hook)
                             </li>
                             <li>
                                 Sections inside an inviroment. Where enviroment could represent a whole company, and a sections can represent only one meeting. Or the enviroment represent a whole college and a section representc a course secrion, example: introduction_python
@@ -512,7 +526,7 @@ export default function CheckIn({ searchParams }) {
                                 Bring grouping faces loginc more to the API, less on the interface
                             </li>
                             <li>
-                                Manage grouping faces
+                                Manage grouping faces, ability to ungroup
                             </li>
                         </ol>
                     </fieldset>
@@ -530,8 +544,6 @@ export default function CheckIn({ searchParams }) {
 
                                     ))}
                                 </select>
-
-                                <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url)}>CheckIn</button>
 
                                 <label htmlFor="checkBoxStartTimer" >Automatic update</label>
                                 <input id="checkBoxStartTimer" type="checkbox" value={startTimer} onChange={(e) => setStartTimer(e.target.checked)} />
@@ -559,9 +571,14 @@ export default function CheckIn({ searchParams }) {
                                         <label htmlFor="inputNameNewUser">Name new user</label>
                                         <input id="inputNameNewUser" value={nameNewFace} onChange={(e) => setNameNewFace(e.target.value)} placeholder="name new user"></input>
                                     </div>
-                                    <input type="file" id="imageToRecognize" onChange={(e) => { setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); }} multiple></input>
-                                    {/* <img alt="preview image" src={previewFileUploadImage} height={defaultHigth} width={defaultHigth} /> */}
-                                    <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)}>Register New:{statusSubmition}</button>
+                                    <input type="file" id="imageToRecognize" onChange={(e) => { setFileLoaded(true); setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); }} multiple></input>
+                                    <div style={{ display: "flex", gap: "1rem" }}>
+                                        <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={!fileLoaded}>Register New From File</button>
+                                        <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url, nameNewFace)}>Register New From Web Cam</button>
+                                    </div>
+                                    <div>
+                                        <h1>{statusSubmition}</h1>
+                                    </div>
                                 </fieldset>
 
                                 {webCamImagePreview && (
@@ -662,7 +679,7 @@ export default function CheckIn({ searchParams }) {
                                     <button onClick={() => downloadCSV(clientIpAddress, enviromentName, api_url)}>Download CSV report</button>
                                 </div>
 
-                                <a style={{display:"flex",flexDirection:"column",style:"underling"}} target="_blank" href={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}>
+                                <a style={{ display: "flex", flexDirection: "column", style: "underling" }} target="_blank" href={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}>
                                     <Canvas
                                         text={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}
                                         options={{
@@ -675,7 +692,7 @@ export default function CheckIn({ searchParams }) {
                                                 light: '#FFBF60FF',
                                             },
                                         }}
-                                        
+
                                     />
                                     Scan QrCode for Self Registration Interface
                                 </a>
