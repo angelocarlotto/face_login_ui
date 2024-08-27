@@ -388,10 +388,13 @@ export default function CheckIn({ searchParams }) {
                         <legend><h1> Instructions</h1></legend>
 
                         <div>
-                            <strong>
+                            <p>
                                 A case of study to create a API using python+Flask and a Front End using
                                 NextJs
-                            </strong>
+                            </p>
+                            <p>
+                                The best case cenario to use this aplication is: adults, one person at a time, no adorments on the face, front-facing fotos
+                            </p>
                             <h3>Disclaimer:</h3>
                             <div>
                                 To this interface works, all you have to do is run this comand line:
@@ -435,7 +438,36 @@ export default function CheckIn({ searchParams }) {
 
                     </fieldset>
                     <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
-                        <legend><h1> To Do</h1></legend>
+                        <legend><h1> Features</h1></legend>
+                        <ol>
+                            <li>
+                                Face detection and recognition on base64 JPEG string images
+                            </li>
+                            <li>
+                                Download CSV report 
+                            </li>
+                            <li>
+                                Save and Load the server memory on the disk
+                            </li>
+                            <li>
+                                Set a name to each face recognized
+                            </li>
+                            <li>
+                                Delete face
+                            </li>
+                            <li>
+                                Grouping faces
+                            </li>
+                            <li>
+                                List detected faces
+                            </li>
+                            <li>
+                                Automatic recognized faces based on a interval of time
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
+                        <legend><h1> To Do/Road Map</h1></legend>
                         <ol>
                             <li>
                                 Anti spoofing
@@ -460,6 +492,12 @@ export default function CheckIn({ searchParams }) {
                             </li>
                             <li>
                                 Sections inside an inviroment. Where enviroment could represent a whole company, and a sections can represent only one meeting. Or the enviroment represent a whole college and a section representc a course secrion, example: introduction_python
+                            </li>
+                            <li>
+                                Ability to deal with any king of images others then JPEG
+                            </li>
+                            <li>
+                                Manage grouping faces
                             </li>
                         </ol>
                     </fieldset>
@@ -633,15 +671,14 @@ export default function CheckIn({ searchParams }) {
                                 <th>first_detected</th>
                                 <th>last_detected</th>
                                 <th>Main Face</th>
-                                <th>Grouping Faces</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {dataTable.length > 0 && (<>{
-                                new Set(dataTable.map(e => e.pricipal_uuid)).keys().toArray().map((key, i, a) => {
+                                new Set(dataTable.map(e => e.principal_uuid)).keys().toArray().map((key, i, a) => {
                                     let object = dataTable.find((face) => face.uuid == key);
-                                    let objectList = dataTable.filter((face) => face.pricipal_uuid == key);
+                                    let objectList = dataTable.filter((face) => face.principal_uuid == key);
 
                                     const result = objectList.reduce((acc, record) => {
                                         // Parse dates using the Date constructor
@@ -683,8 +720,8 @@ export default function CheckIn({ searchParams }) {
                                             <td>
                                                 <input
                                                     type="text"
-                                                    onChange={(e) =>
-                                                        update_face_name(e, e.target.value, object.uuid, clientIpAddress, enviromentName, api_url)
+                                                    onChange={async (e) =>
+                                                       await update_face_name(e, e.target.value, object.uuid, clientIpAddress, enviromentName, api_url)
                                                     }
                                                     value={object.name}
                                                 />
@@ -693,15 +730,14 @@ export default function CheckIn({ searchParams }) {
                                             <td> {result.latest.toLocaleTimeString()}</td>
                                             <td>{result.latest.toLocaleTimeString()}</td>
                                             <td>
-                                                <select defaultValue={object.pricipal_uuid} onChange={async (e) => await mergeTwoFaces(e, object.uuid, clientIpAddress, enviromentName, api_url)}>
+                                              {objectList.length==1 &&  <select defaultValue={object.principal_uuid} onChange={async (e) => await mergeTwoFaces(e, object.uuid, clientIpAddress, enviromentName, api_url)}>
                                                     <option >Select...</option>
-                                                    {dataTable.filter((e) => e.uuid != object.uuid && e.uuid==e.pricipal_uuid).map(function (objectAux, i) {
+                                                    {dataTable.filter((e) => e.uuid != object.uuid && e.uuid==e.principal_uuid).map(function (objectAux, i) {
                                                         return (<option key={objectAux.uuid} value={objectAux.uuid}> {objectAux.name}-{objectAux.short_uuid}</option>);
                                                     })
                                                     }
-                                                </select>
+                                                </select> || objectList.length - 1}
                                             </td>
-                                            <td> {objectList.length - 1}</td>
                                             <td> <button onClick={async (e) =>
                                                 await deleteFace(object.uuid, clientIpAddress, enviromentName, api_url)
                                             }>Delete</button></td>
