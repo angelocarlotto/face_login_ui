@@ -503,18 +503,17 @@ export default function CheckIn({ searchParams }) {
                     <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
                         <legend><h1> To Do/Road Map</h1></legend>
                         <ol>
-                            
                             <li>
                                 Ability to deal with any king of images others then JPEG
                             </li>
-
+                            <li>
+                                IoT(ESP32) integration . capability to make request always a face is recognized ( Web hook).
+                            </li>
                             <li>
                                 Bring grouping faces loginc more to the API, less on the interface
                             </li>
 
                             <li>Order result based on date last seen(not sure yet)</li>
-
-
                             <li>
                                 persist data autoside container, so data not lost when constainer is shutdown
                             </li>
@@ -522,12 +521,8 @@ export default function CheckIn({ searchParams }) {
                                 Anti spoofing
                             </li>
                             <li>
-                                IoT(ESP32) integration . capability to make request always a face is recognized ( Web hook).
-                            </li>
-                            <li>
                                 Sections inside an inviroment. Where enviroment could represent a whole company, and a sections can represent only one meeting. Or the enviroment represent a whole college and a section representc a course secrion, example: introduction_python
                             </li>
-
                         </ol>
                     </fieldset>
                 </div>
@@ -751,7 +746,7 @@ export default function CheckIn({ searchParams }) {
                                             <td>{object.short_uuid}</td>
                                             <td style={{ display: "flex", gap: "0.2rem" }}>
                                                 {resultArrayFirstPhotos.map((obj, ind, arr) =>
-                                                    <img style={{ cursor: "pointer" }}
+                                                    <img key={obj.uuid} style={{ cursor: "pointer" }}
                                                         src={obj.pic}
                                                         onClick={async (e) => await mergeTwoFaces(obj.uuid, obj.uuid, clientIpAddress, enviromentName, api_url)}
 
