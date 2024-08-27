@@ -19,7 +19,7 @@ export default function CheckIn({ searchParams }) {
     const [nameNewFace, setNameNewFace] = useState("");
     const [qtdRequestes, setqtdRequestes] = useState(0);
     const [fileLoaded, setFileLoaded] = useState(false);
-    
+
     const [qtdResponses, setqtdResponses] = useState(0);
     const [statusSubmition, setstatusSubmition] = useState();
     const [dataTable, setDataTable] = useState([]);
@@ -263,14 +263,14 @@ export default function CheckIn({ searchParams }) {
             }, 500)
         );
     };
-    const mergeTwoFaces = async (e, uuid, clientIPAddressAux, enviromentAux, apiURLAux) => {
+    const mergeTwoFaces = async (uuidPrincipal, uuid, clientIPAddressAux, enviromentAux, apiURLAux) => {
         try {
             setqtdRequestes(prev => prev + 1);
             const response = await fetch(
                 `${apiURLAux}/api/bind_to_principal_face?key_enviroment_url=${enviromentAux}&ipaddress=${clientIPAddressAux}`,
                 {
                     body: JSON.stringify({
-                        uuidPrincipal: e.target.value,
+                        uuidPrincipal: uuidPrincipal,
                         uuid: uuid
                     }),
 
@@ -493,19 +493,27 @@ export default function CheckIn({ searchParams }) {
                             <li>
                                 load data from server when client  enter/accessed the page
                             </li>
+                            <li>Manage group os faces during a delition. When delete the main face, should delete the group or reupdate the childs to be on its own uuid principal_uuid.</li>
+                            <li>
+                                Manage grouping faces, ability to ungroup
+                            </li>
+                            <li>Show date and time on result table</li>
                         </ol>
                     </fieldset>
                     <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
                         <legend><h1> To Do/Road Map</h1></legend>
                         <ol>
-
+                            
                             <li>
                                 Ability to deal with any king of images others then JPEG
                             </li>
 
-                            <li>Manage group os faces during a delition. When delete the main face, should delete the group or reupdate the childs to be on its own uuid principal_uuid.</li>
-                            <li>Order result based on date last seen</li>
-                            <li>Show date and time on result table</li>
+                            <li>
+                                Bring grouping faces loginc more to the API, less on the interface
+                            </li>
+
+                            <li>Order result based on date last seen(not sure yet)</li>
+
 
                             <li>
                                 persist data autoside container, so data not lost when constainer is shutdown
@@ -514,20 +522,12 @@ export default function CheckIn({ searchParams }) {
                                 Anti spoofing
                             </li>
                             <li>
-                                IoT(ESP32) integration (based on web hook)
-                            </li>
-                            <li>
-                                capability to make request always a face is recognized ( Web hook)
+                                IoT(ESP32) integration . capability to make request always a face is recognized ( Web hook).
                             </li>
                             <li>
                                 Sections inside an inviroment. Where enviroment could represent a whole company, and a sections can represent only one meeting. Or the enviroment represent a whole college and a section representc a course secrion, example: introduction_python
                             </li>
-                            <li>
-                                Bring grouping faces loginc more to the API, less on the interface
-                            </li>
-                            <li>
-                                Manage grouping faces, ability to ungroup
-                            </li>
+
                         </ol>
                     </fieldset>
                 </div>
@@ -573,8 +573,8 @@ export default function CheckIn({ searchParams }) {
                                     </div>
                                     <input type="file" id="imageToRecognize" onChange={(e) => { setFileLoaded(true); setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); }} multiple></input>
                                     <div style={{ display: "flex", gap: "1rem" }}>
-                                        <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={!fileLoaded}>Register New From File</button>
-                                        <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url, nameNewFace)}>Register New From Web Cam</button>
+                                        <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={!fileLoaded || nameNewFace.trim().length == 0}>Register New From File</button>
+                                        <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={nameNewFace.trim().length == 0}>Register New From Web Cam</button>
                                     </div>
                                     <div>
                                         <h1>{statusSubmition}</h1>
@@ -723,7 +723,8 @@ export default function CheckIn({ searchParams }) {
                                     let object = dataTable.find((face) => face.uuid == key);
                                     let objectList = dataTable.filter((face) => face.principal_uuid == key);
 
-                                    const resultArrayFirstPhotos = objectList.map((e) => e.encoded64_first_pic);
+                                    //const resultArrayFirstPhotos = objectList.map((e) => e.encoded64_first_pic);
+                                    const resultArrayFirstPhotos = objectList.map((e) => ({ pic: e.encoded64_first_pic, uuid: e.uuid }));
 
                                     const resultLatestAndEarliest = objectList.reduce((acc, record) => {
                                         // Parse dates using the Date constructor
@@ -748,10 +749,12 @@ export default function CheckIn({ searchParams }) {
                                                 {i}-{object.index}
                                             </td>
                                             <td>{object.short_uuid}</td>
-                                            <td>
-                                                {resultArrayFirstPhotos.map((pic, ind, arr) =>
-                                                    <img
-                                                        src={pic}
+                                            <td style={{ display: "flex", gap: "0.2rem" }}>
+                                                {resultArrayFirstPhotos.map((obj, ind, arr) =>
+                                                    <img style={{ cursor: "pointer" }}
+                                                        src={obj.pic}
+                                                        onClick={async (e) => await mergeTwoFaces(obj.uuid, obj.uuid, clientIpAddress, enviromentName, api_url)}
+
                                                         alt={"object.first_know_shot"}
                                                         width={50}
                                                     />
@@ -775,10 +778,10 @@ export default function CheckIn({ searchParams }) {
                                                 />
                                             </td>
                                             <td>{objectList.reduce((a, b) => a + b.qtd, 0)}</td>
-                                            <td> {resultLatestAndEarliest.latest.toLocaleTimeString()}</td>
-                                            <td>{resultLatestAndEarliest.latest.toLocaleTimeString()}</td>
+                                            <td> {resultLatestAndEarliest.latest.toLocaleString()}</td>
+                                            <td>{resultLatestAndEarliest.latest.toLocaleString()}</td>
                                             <td>
-                                                {objectList.length == 1 && <select defaultValue={object.principal_uuid} onChange={async (e) => await mergeTwoFaces(e, object.uuid, clientIpAddress, enviromentName, api_url)}>
+                                                {objectList.length == 1 && <select defaultValue={object.principal_uuid} onChange={async (e) => await mergeTwoFaces(e.target.value, object.uuid, clientIpAddress, enviromentName, api_url)}>
                                                     <option >Select...</option>
                                                     {dataTable.filter((e) => e.uuid != object.uuid && e.uuid == e.principal_uuid).map(function (objectAux, i) {
                                                         return (<option key={objectAux.uuid} value={objectAux.uuid}> {objectAux.name}-{objectAux.short_uuid}</option>);
