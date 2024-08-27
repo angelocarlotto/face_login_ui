@@ -13,7 +13,7 @@ export default function CheckIn({ searchParams }) {
     const { Canvas } = useQRCode();
     const [apiIsRunningMessage, setAPIIsRunningMessage] = useState(
         "your api is NOT running"
-    ); 
+    );
     let controller = new AbortController();
 
     const [nameNewFace, setNameNewFace] = useState("");
@@ -113,9 +113,9 @@ export default function CheckIn({ searchParams }) {
     );
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'visible') {
-            if(startTimer )
+            if (startTimer)
                 setStartTimer(false)
-                console.log("Page not visible")
+            console.log("Page not visible")
         } else {
             console.log("Page Visible")
         }
@@ -517,7 +517,7 @@ export default function CheckIn({ searchParams }) {
                         </ol>
                     </fieldset>
                 </div>
-                <div style={{ position: "sticky", top: "0" ,  position: "-webkit-sticky"}}>
+                <div style={{ position: "sticky", top: "0", position: "-webkit-sticky" }}>
                     <div style={{ display: "flex", flexDirection: "row", gap: "0.2rem", flexGrow: "1", justifyContent: "space-between" }}>
                         <fieldset style={{ position: "sticky", top: "0" }}>
                             <legend><h2>WebCam Monitor</h2></legend>
@@ -559,7 +559,7 @@ export default function CheckIn({ searchParams }) {
                                         <label htmlFor="inputNameNewUser">Name new user</label>
                                         <input id="inputNameNewUser" value={nameNewFace} onChange={(e) => setNameNewFace(e.target.value)} placeholder="name new user"></input>
                                     </div>
-                                    <input type="file" id="imageToRecognize" onChange={(e) => { setWebCamImagePreview(URL.createObjectURL(e.target.files[0]));  }} multiple></input>
+                                    <input type="file" id="imageToRecognize" onChange={(e) => { setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); }} multiple></input>
                                     {/* <img alt="preview image" src={previewFileUploadImage} height={defaultHigth} width={defaultHigth} /> */}
                                     <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)}>Register New:{statusSubmition}</button>
                                 </fieldset>
@@ -661,21 +661,22 @@ export default function CheckIn({ searchParams }) {
                                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                                     <button onClick={() => downloadCSV(clientIpAddress, enviromentName, api_url)}>Download CSV report</button>
                                 </div>
-                               
 
-                                <Canvas
-                                    text={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}
-                                    options={{
-                                        errorCorrectionLevel: 'M',
-                                        margin: 3,
-                                        scale: 4,
-                                        width: 200,
-                                        color: {
-                                            dark: '#010599FF',
-                                            light: '#FFBF60FF',
-                                        },
-                                    }}
-                                />
+                                <a href={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}>
+                                    <Canvas
+                                        text={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}
+                                        options={{
+                                            errorCorrectionLevel: 'M',
+                                            margin: 3,
+                                            scale: 4,
+                                            width: 200,
+                                            color: {
+                                                dark: '#010599FF',
+                                                light: '#FFBF60FF',
+                                            },
+                                        }}
+                                    />
+                                </a>
                             </div>
                         </fieldset>
                     </div>
