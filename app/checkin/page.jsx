@@ -4,13 +4,18 @@ import { React, useEffect, useState, useCallback, useRef } from "react";
 import Webcam from "react-webcam";
 import { useQRCode } from 'next-qrcode';
 import styles from "../page.module.css";
+//store the original fetch
+
 export default function CheckIn({ searchParams }) {
     const { Canvas } = useQRCode();
     const [apiIsRunningMessage, setAPIIsRunningMessage] = useState(
         "your api is NOT running"
     ); const [previewFileUploadImage, setPreviewFileUploadImage] = useState();
+    let controller = new AbortController();
 
-    const [nameNewFace, setNameNewFace] = useState(null);
+    const [nameNewFace, setNameNewFace] = useState("");
+    const [qtdRequestes, setqtdRequestes] = useState(0);
+    const [qtdResponses, setqtdResponses] = useState(0);
     const [statusSubmition, setstatusSubmition] = useState();
     const [dataTable, setDataTable] = useState([]);
     const [searchedTimeOut, setSearchedTimeOut] = useState(null);
@@ -24,6 +29,7 @@ export default function CheckIn({ searchParams }) {
     const [startTimer, setStartTimer] = useState(false);
     const [deviceId, setDeviceId] = useState({});
     const [devices, setDevices] = useState([]);
+    const selectDevices = useRef(null);
     const webcamRef = useRef(null);
     const [webCamImagePreview, setWebCamImagePreview] = useState();
     const [clientIpAddress, setClientIpAddress] = useState('');
@@ -32,11 +38,17 @@ export default function CheckIn({ searchParams }) {
     const [enviromentName, setEnviromentName] = useState(
         searchParams.enviroment_name
     );
-
+    const triggerChange = () => {
+        if (selectDevices.current) {
+            // Create and dispatch a new change event
+            const event = new Event('change', { bubbles: true });
+            selectDevices.current.dispatchEvent(event);
+        }
+    };
     const handleDevices = useCallback(
         mediaDevices => {
-            console.log(mediaDevices);
             setDevices(mediaDevices.filter(({ kind }) => kind === "videoinput"))
+            triggerChange()
         },
         [setDevices]
     );
@@ -51,8 +63,9 @@ export default function CheckIn({ searchParams }) {
 
     useEffect(() => {
         const fetchData = async () => {
-
-            let response = await fetch(`https://api.ipify.org?format=json`); //.then((response) => {
+            setqtdRequestes(prev => prev + 1);
+            let response = await fetch(`https://api.ipify.org?format=json`);
+            setqtdResponses(prev => prev + 1);
             if (response.ok) {
                 response.json().then((response) => {
                     setClientIpAddress(response.ip);
@@ -65,9 +78,10 @@ export default function CheckIn({ searchParams }) {
 
     useEffect(() => {
         const fetchData = async () => {
-
+            setqtdRequestes(prev => prev + 1);
             let response = await fetch(`${api_url}/api/hi?ipaddress=${clientIpAddress}`); //.then((response) => {
             setapiIsRunning(response.ok);
+            setqtdResponses(prev => prev + 1);
             if (response.ok) {
                 response.json().then((response) => {
                     setAPIIsRunningMessage(response);
@@ -82,6 +96,10 @@ export default function CheckIn({ searchParams }) {
     useEffect(() => {
         clearInterval(timerPrintScreen);
 
+        if (!startTimer) {
+            controller.abort();
+            controller = new AbortController();
+        }
         if (startTimer)
             setTimerPrintScreen(setInterval(async () => {
                 await onClickCheckIn(clientIpAddress, enviromentName, api_url);
@@ -90,6 +108,8 @@ export default function CheckIn({ searchParams }) {
         ,
         [startTimer, frequencyRefreshImage, clientIpAddress, enviromentName, api_url]
     );
+
+
 
     const onDeviceChange = (e) => {
         let device = devices.find((item) => item.deviceId == e.target.value);
@@ -129,6 +149,7 @@ export default function CheckIn({ searchParams }) {
 
         data2.append("nameNewFace", nameNewFaceAux)
         try {
+            setqtdRequestes(prev => prev + 1);
             const response = await fetch(
                 `${apiURLAux}/api/recognize_face?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`,
                 {
@@ -137,6 +158,7 @@ export default function CheckIn({ searchParams }) {
                     method: "POST",
                 }
             );
+            setqtdResponses(prev => prev + 1);
             if (!response.ok) {
                 throw new Error("Failed to fetch data");
             }
@@ -153,20 +175,10 @@ export default function CheckIn({ searchParams }) {
     };
 
 
-    const update_face_name = async (e, new_name, uuid, clientIpAddressAux, enviromentNameAux, apiURLAux) => {
-        clearTimeout(searchedTimeOut);
-        let obj = dataTable.find((e) => e.uuid == uuid);
-        obj.name = new_name;
-        setSearchedTimeOut(
-            setTimeout(async () => {
-                await updateFaceName(uuid, new_name, clientIpAddressAux, enviromentNameAux, apiURLAux);
-            }, 500)
-        );
-    };
 
     async function deleteFace(uuid, clientIpAddressAux, enviromentNameAux, apiURLAux) {
         try {
-            // console.log(enviromentName);
+            setqtdRequestes(prev => prev + 1);
             const response = await fetch(
                 `${apiURLAux}/api/delete_face?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`,
                 {
@@ -181,6 +193,7 @@ export default function CheckIn({ searchParams }) {
                     },
                 }
             );
+            setqtdResponses(prev => prev + 1);
             if (!response.ok) {
                 throw new Error("Failed to fetch data");
             }
@@ -191,10 +204,47 @@ export default function CheckIn({ searchParams }) {
             console.error(error);
         }
     }
+    const update_face_name = async (e, new_name, uuid, clientIpAddressAux, enviromentNameAux, apiURLAux) => {
+        clearTimeout(searchedTimeOut);
+        let obj = dataTable.find((e) => e.uuid == uuid);
+        obj.name = new_name;
+        setSearchedTimeOut(
+            setTimeout(async () => {
+                await updateFaceName(uuid, new_name, clientIpAddressAux, enviromentNameAux, apiURLAux);
+            }, 500)
+        );
+    };
+    const mergeTwoFaces = async (e, uuid, clientIPAddressAux, enviromentAux, apiURLAux) => {
+        try {
+            setqtdRequestes(prev => prev + 1);
+            const response = await fetch(
+                `${apiURLAux}/api/bind_to_principal_face?key_enviroment_url=${enviromentAux}&ipaddress=${clientIPAddressAux}`,
+                {
+                    body: JSON.stringify({
+                        uuidPrincipal: e.target.value,
+                        uuid: uuid
+                    }),
 
+                    method: "POST",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                }
+            );
+            setqtdResponses(prev => prev + 1);
+            if (!response.ok) {
+                throw new Error("Failed to fetch data");
+            }
+
+            const data = await response.json();
+            setDataTable(data);
+        } catch (error) {
+            console.error(error);
+        }
+    }
     async function updateFaceName(uuid, new_name, clientIpAddressAux, enviromentNameAux, apiURLAux) {
         try {
-            // console.log(enviromentName);
+            setqtdRequestes(prev => prev + 1);
             const response = await fetch(
                 `${apiURLAux}/api/update_face_name?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`,
                 {
@@ -209,6 +259,7 @@ export default function CheckIn({ searchParams }) {
                     },
                 }
             );
+            setqtdResponses(prev => prev + 1);
             if (!response.ok) {
                 throw new Error("Failed to fetch data");
             }
@@ -220,6 +271,7 @@ export default function CheckIn({ searchParams }) {
         }
     }
     const downloadCSV = (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
+        setqtdRequestes(prev => prev + 1);
         fetch(`${apiURLAux}/api/download_csv?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`)  // URL do endpoint Flask
             .then(response => {
                 if (!response.ok) {
@@ -241,34 +293,52 @@ export default function CheckIn({ searchParams }) {
             .catch(error => {
                 console.error('Erro:', error);
             });
+        setqtdResponses(prev => prev + 1);
     };
     const saveDataBase = async (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
+        setqtdRequestes(prev => prev + 1);
         const response = await fetch(
             `${apiURLAux}/api/save?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`
             , { method: "POST" });
+        setqtdResponses(prev => prev + 1);
         if (!response.ok) {
             throw new Error("Failed to fetch data");
         }
 
         const data = await response.json();
-        // console.log(data);
     };
     const loadDataBase = async (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
+        setqtdRequestes(prev => prev + 1);
         const response = await fetch(
             `${apiURLAux}/api/load?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`
         );
+        setqtdResponses(prev => prev + 1);
         if (!response.ok) {
             throw new Error("Failed to fetch data");
         }
 
         const data = await response.json();
-        //console.log(data);
+
+        setDataTable(data);
+    };
+
+    const loadDataBaseFromMemory = async (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
+        setqtdRequestes(prev => prev + 1);
+        const response = await fetch(
+            `${apiURLAux}/api/load_from_memory?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`
+        );
+        setqtdResponses(prev => prev + 1);
+        if (!response.ok) {
+            throw new Error("Failed to fetch data");
+        }
+
+        const data = await response.json();
 
         setDataTable(data);
     };
     const recognizeFace = async (imageSrc = None, clientIpAddressAux, enviromentNameAux, apiURLAux) => {
         try {
-            //console.log(enviromentName);
+            setqtdRequestes(prev => prev + 1);
             const response = await fetch(
                 `${apiURLAux}/api/recognize_face?key_enviroment_url=${enviromentNameAux}&ipaddress=${clientIpAddressAux}`,
                 {
@@ -280,39 +350,20 @@ export default function CheckIn({ searchParams }) {
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
                     },
+                    signal: controller.signal
                 }
             );
+            setqtdResponses(prev => prev + 1);
             if (!response.ok) {
-                throw new Error("Failed to fetch data");
+                //throw new Error("Failed to fetch data");
+            }
+            else {
+                const data = await response.json();
+
+                setqtdFound(data.lastRegonizedFaces);
+                setDataTable(data.faces_know);
             }
 
-            const data = await response.json();
-
-            setqtdFound(data.lastRegonizedFaces);
-            setDataTable(data.faces_know);
-
-            var c = document.getElementById("myCanvas");
-            var ctx = c.getContext("2d");
-            var image = new Image();
-            image.src = imageSrc;
-            //console.log(data.lastRegonizedFaces);
-
-            image.onload = function () {
-                ctx.reset();
-                data.lastRegonizedFaces.forEach((face) => {
-                    ctx.drawImage(this, 0, 0);
-                    ctx.font = "30px Arial";
-                    ctx.lineWidth = "2";
-                    ctx.fillStyle = "red";
-                    let obj = data.faces_know.find((e) => e.uuid == face.uuid);
-                    //(top, right, bottom, left)
-                    //fillRect(x=top, y=left, width= right - left, height= bottom-top)
-                    let [top, right, bottom, left] = face.location;
-                    ctx.rect(left, top, right - left, bottom - top);
-                    ctx.fillText(`${obj.name} - ${obj.qtd}`, left, top);
-                });
-                ctx.stroke();
-            };
         } catch (error) {
             console.error(error);
         }
@@ -377,9 +428,13 @@ export default function CheckIn({ searchParams }) {
                                     </p>
                                 </>
                             )}
+                            <div>
+                                <p> <strong>Request/Responses:</strong>{qtdRequestes}/{qtdResponses} </p>
+                            </div>
                         </div>
+
                     </fieldset>
-                    <fieldset style={{ minWidth: "20rem", padding: "2rem", backgroundColor: "yellow" }}>
+                    <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
                         <legend><h1> To Do</h1></legend>
                         <ol>
                             <li>
@@ -403,6 +458,9 @@ export default function CheckIn({ searchParams }) {
                             <li>
                                 QrCode + Self registration
                             </li>
+                            <li>
+                                Sections inside an inviroment. Where enviroment could represent a whole company, and a sections can represent only one meeting. Or the enviroment represent a whole college and a section representc a course secrion, example: introduction_python
+                            </li>
                         </ol>
                     </fieldset>
                 </div>
@@ -410,7 +468,7 @@ export default function CheckIn({ searchParams }) {
                     <fieldset>
                         <legend><h2>WebCam Monitor</h2></legend>
                         <div style={{ display: "flex", gap: "0.2rem", paddingBottom: "1rem" }}>
-                            <select onChange={onDeviceChange}>
+                            <select ref={selectDevices} onChange={onDeviceChange}>
                                 {devices.map((device, key) => (
                                     <option key={key} value={device.deviceId}>
                                         {device.label}
@@ -529,6 +587,7 @@ export default function CheckIn({ searchParams }) {
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <button onClick={() => saveDataBase(clientIpAddress, enviromentName, api_url)}>Save(Persist the enviroment data on disk)</button>
                                 <button onClick={() => loadDataBase(clientIpAddress, enviromentName, api_url)}>Load (Load the enviroment data on disk)</button>
+                                <button onClick={() => loadDataBaseFromMemory(clientIpAddress, enviromentName, api_url)}>Load from Memory</button>
                             </div>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <button onClick={() => downloadCSV(clientIpAddress, enviromentName, api_url)}>Download CSV report</button>
@@ -539,7 +598,7 @@ export default function CheckIn({ searchParams }) {
                                     <label htmlFor="inputNameNewUser">Name new user</label>
                                     <input id="inputNameNewUser" value={nameNewFace} onChange={(e) => setNameNewFace(e.target.value)} placeholder="name new user"></input>
                                 </div>
-                                <input type="file" id="imageToRecognize" onChange={(e) => setPreviewFileUploadImage(URL.createObjectURL(e.target.files[0]))} multiple></input>
+                                <input type="file" id="imageToRecognize" onChange={(e) => { setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); setPreviewFileUploadImage(URL.createObjectURL(e.target.files[0])); }} multiple></input>
                                 <img alt="preview image" src={previewFileUploadImage} height={defaultHigth} width={defaultHigth} />
                                 <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)}>Register New:{statusSubmition}</button>
                             </fieldset>
@@ -573,13 +632,121 @@ export default function CheckIn({ searchParams }) {
                                 <th>first_detected</th>
                                 <th>last_detected</th>
                                 <th>Main Face</th>
+                                <th>Grouping Faces</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {dataTable.length > 0 &&
-                                dataTable
-                                    .sort(
+                            {/* {dataTable.length > 0 &&
+                                Map.groupBy(dataTable, ({ pricipal_uuid }) => pricipal_uuid).forEach((value, key, array) => {
+                                    let object = dataTable.find((face) => face.uuid == key);
+
+                                    <tr key={object.uuid}>
+                                        <td>
+                                            {object.index}
+                                        </td>
+                                        <td>{object.short_uuid}</td>
+                                        <td>
+                                            <img
+                                                src={object.encoded64_last_pic}
+                                                alt={object.last_know_shot}
+                                                width={50}
+                                            />
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                onChange={(e) =>
+                                                    update_face_name(e, e.target.value, object.uuid, clientIpAddress, enviromentName, api_url)
+                                                }
+                                                value={object.name}
+                                            />
+                                        </td>
+                                        <td>{object.qtd}</td>
+                                        <td> {object.first_detected}</td>
+                                        <td>{object.last_detected}</td>
+                                        <td>
+                                            <select defaultValue={object.pricipal_uuid} onChange={async (e) => await mergeTwoFaces(e, object.uuid, clientIpAddress, enviromentName, api_url)}>
+                                                <option >Select...</option>
+                                                {dataTable.filter((e) => e.uuid != object.uuid).map(function (objectAux, i) {
+                                                    return (<option key={objectAux.uuid} value={objectAux.uuid}> {objectAux.name}-{objectAux.short_uuid}</option>);
+                                                })
+                                                }
+                                            </select>
+                                        </td>
+                                        <td> <button onClick={async (e) =>
+                                            await deleteFace(object.uuid, clientIpAddress, enviromentName, api_url)
+                                        }>Delete</button></td>
+                                    </tr>
+                                })
+                            } */}
+                            {dataTable.length > 0 && (<>{
+                                new Set(dataTable.map(e => e.pricipal_uuid)).keys().toArray().map((key, i, a) => {
+                                    let object = dataTable.find((face) => face.uuid == key);
+                                    let objectList = dataTable.filter((face) => face.pricipal_uuid == key);
+
+                                    const result = objectList.reduce((acc, record) => {
+                                        // Parse dates using the Date constructor
+                                        const firstDate = new Date(record.first_detected);
+                                        const lastDate = new Date(record.last_detected);
+
+                                        // Update earliest date
+                                        if (!acc.earliest || firstDate < acc.earliest) {
+                                            acc.earliest = firstDate;
+                                        }
+
+                                        // Update latest date
+                                        if (!acc.latest || lastDate > acc.latest) {
+                                            acc.latest = lastDate;
+                                        }
+
+                                        return acc;
+                                    }, {});
+                                    return (
+                                        <tr key={object.uuid}>
+                                            <td>
+                                                 {i}-{object.index} 
+                                            </td>
+                                            <td>{object.short_uuid}</td>
+                                            <td>
+                                                <img
+                                                    src={object.encoded64_last_pic}
+                                                    alt={object.last_know_shot}
+                                                    width={50}
+                                                />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="text"
+                                                    onChange={(e) =>
+                                                        update_face_name(e, e.target.value, object.uuid, clientIpAddress, enviromentName, api_url)
+                                                    }
+                                                    value={object.name}
+                                                />
+                                            </td>
+                                            <td>{objectList.reduce((a, b) => a + b.qtd, 0)}</td>
+                                            <td> {result.latest.toLocaleTimeString()}</td>
+                                            <td>{result.latest.toLocaleTimeString()}</td>
+                                            <td>
+                                                <select defaultValue={object.pricipal_uuid} onChange={async (e) => await mergeTwoFaces(e, object.uuid, clientIpAddress, enviromentName, api_url)}>
+                                                    <option >Select...</option>
+                                                    {dataTable.filter((e) => e.uuid != object.uuid).map(function (objectAux, i) {
+                                                        return (<option key={objectAux.uuid} value={objectAux.uuid}> {objectAux.name}-{objectAux.short_uuid}</option>);
+                                                    })
+                                                    }
+                                                </select>
+                                            </td>
+                                            <td> {objectList.length - 1}</td>
+                                            <td> <button onClick={async (e) =>
+                                                await deleteFace(object.uuid, clientIpAddress, enviromentName, api_url)
+                                            }>Delete</button></td>
+
+                                        </tr>
+                                    ); //<ObjectRow obj={object} key={i} />;
+                                })
+                            }</>)}
+                            {/* {dataTable.length > 0 && 
+                                dataTable.sort(
                                         (a, b) => new Date(b.last_detected) - new Date(a.last_detected)
                                     )
                                     .map(function (object, i) {
@@ -609,23 +776,20 @@ export default function CheckIn({ searchParams }) {
                                                 <td> {object.first_detected}</td>
                                                 <td>{object.last_detected}</td>
                                                 <td>
-
-                                                    <select>
-                                                        <option>Select...</option>
-                                                        {dataTable.map(function (object, i) {
-
-                                                            return (<option key={i} value={object.short_uuid}> {object.name}-{object.short_uuid}</option>);
+                                                    <select defaultValue={object.pricipal_uuid} onChange={async (e) => await mergeTwoFaces(e, object.uuid, clientIpAddress, enviromentName, api_url)}>
+                                                        <option >Select...</option>
+                                                        {dataTable.filter((e) => e.uuid != object.uuid).map(function (objectAux, i) {
+                                                            return (<option key={objectAux.uuid} value={objectAux.uuid}> {objectAux.name}-{objectAux.short_uuid}</option>);
                                                         })
                                                         }
                                                     </select>
-
                                                 </td>
                                                 <td> <button onClick={async (e) =>
                                                     await deleteFace(object.uuid, clientIpAddress, enviromentName, api_url)
                                                 }>Delete</button></td>
                                             </tr>
                                         ); //<ObjectRow obj={object} key={i} />;
-                                    })}
+                                    })} */}
                         </tbody>
 
                         <tfoot>
