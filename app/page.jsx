@@ -390,7 +390,7 @@ export default function CheckIn({ searchParams }) {
         }
       `}</style>
 
-            <div style={{ backgroundColor: "blue", paddingLeft: "3rem", padding: "3rem", overflow: "scroll" }}>
+            <div style={{ backgroundColor: "gray", paddingLeft: "3rem", padding: "3rem", overflow: "scroll" }}>
                 <h1>Smart Attendance by Face Login</h1>
                 <div style={{ display: "flex", flexDirection: "row", gap: "0.2rem", flexGrow: "1", justifyContent: "space-between" }}>
                     <fieldset style={{ backgroundColor: "red", padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem" }}>
@@ -662,7 +662,7 @@ export default function CheckIn({ searchParams }) {
                                     <button onClick={() => downloadCSV(clientIpAddress, enviromentName, api_url)}>Download CSV report</button>
                                 </div>
 
-                                <a href={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}>
+                                <a style={{display:"flex",flexDirection:"column",style:"underling"}} target="_blank" href={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}>
                                     <Canvas
                                         text={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}
                                         options={{
@@ -675,7 +675,9 @@ export default function CheckIn({ searchParams }) {
                                                 light: '#FFBF60FF',
                                             },
                                         }}
+                                        
                                     />
+                                    Scan QrCode for Self Registration Interface
                                 </a>
                             </div>
                         </fieldset>

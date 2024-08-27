@@ -94,6 +94,8 @@ export default function SelfRegistration({ searchParams }) {
             setListFacesLastRecognized(data.lastRegonizedFaces);
             setDataTable(data.faces_know);
 
+            setstatusSubmition(data.lastRegonizedFaces.length>0?"Sucess on registration":"Please try Again. Registration not completed.");
+
             //console.log(data);
         } catch (error) {
             console.error(error);
