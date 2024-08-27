@@ -661,7 +661,7 @@ export default function CheckIn({ searchParams }) {
                                         return acc;
                                     }, {});
                                     return (
-                                        <tr key={object.uuid}>
+                                        object && <tr key={object.uuid}>
                                             <td>
                                                 {i}-{object.index}
                                             </td>
