@@ -23,6 +23,8 @@ export default function CheckIn({ searchParams }) {
     const [qtdResponses, setqtdResponses] = useState(0);
     const [statusSubmition, setstatusSubmition] = useState();
     const [dataTable, setDataTable] = useState([]);
+    const [urlWebHook, setUrlWebHook] = useState([]);
+
     const [searchedTimeOut, setSearchedTimeOut] = useState(null);
     const [apiIsRunning, setapiIsRunning] = useState(false);
     const [defaultHigth, setDefaultHigth] = useState(300);
@@ -33,6 +35,7 @@ export default function CheckIn({ searchParams }) {
     const [timerPrintScreen, setTimerPrintScreen] = useState(null);
     const [startTimer, setStartTimer] = useState(false);
     const [deviceId, setDeviceId] = useState({});
+    const [enabledWebHook, setEnabledWebHook] = useState({});
     const [devices, setDevices] = useState([]);
     const selectDevices = useRef(null);
     const webcamRef = useRef(null);
@@ -498,14 +501,15 @@ export default function CheckIn({ searchParams }) {
                                 Manage grouping faces, ability to ungroup
                             </li>
                             <li>Show date and time on result table</li>
+                            <li>
+                                Ability to deal with any king of images others then JPEG, also PNG base64 string
+                            </li>
                         </ol>
                     </fieldset>
                     <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
                         <legend><h1> To Do/Road Map</h1></legend>
                         <ol>
-                            <li>
-                                Ability to deal with any king of images others then JPEG
-                            </li>
+
                             <li>
                                 IoT(ESP32) integration . capability to make request always a face is recognized ( Web hook).
                             </li>
@@ -552,7 +556,7 @@ export default function CheckIn({ searchParams }) {
                                             deviceId: deviceId,
                                             facingMode: "user",
                                         }}
-                                        screenshotFormat="image/jpeg"
+                                        screenshotFormat="image/png"
                                         width={defaultWidth}
                                         height={defaultHigth}
                                         screenshotQuality={1}
@@ -569,7 +573,7 @@ export default function CheckIn({ searchParams }) {
                                     <input type="file" id="imageToRecognize" onChange={(e) => { setFileLoaded(true); setWebCamImagePreview(URL.createObjectURL(e.target.files[0])); }} multiple></input>
                                     <div style={{ display: "flex", gap: "1rem" }}>
                                         <button onClick={(e) => sendPicture(e, clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={!fileLoaded || nameNewFace.trim().length == 0}>Register New From File</button>
-                                        <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url, nameNewFace)} disabled={nameNewFace.trim().length == 0}>Register New From Web Cam</button>
+                                        <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url, nameNewFace)} >Register New From Web Cam</button>
                                     </div>
                                     <div>
                                         <h1>{statusSubmition}</h1>
@@ -633,7 +637,7 @@ export default function CheckIn({ searchParams }) {
                                     <label >vs</label>
                                     <input id="inputDefaultHeigth" type="number" placeholder="any number" value={defaultHigth} onChange={(e) => { setDefaultHigth(Number(e.target.value).toFixed(2)); setDefaultWidth(Number(e.target.value * imageRatio).toFixed(2)) }}></input>
                                 </div>
-                                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", flexGrow: 0, flexShrink:2 }}>
                                     <label htmlFor="inputClientID">Client Ip Adress</label>
                                     <input id="inputClientID" readOnly={true} placeholder="0.0.0.0" value={clientIpAddress} onChange={(e) => setClientIpAddress(e.target.value)}></input>
                                 </div>
@@ -644,6 +648,14 @@ export default function CheckIn({ searchParams }) {
                                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                                     <label htmlFor="inputAPIURL">API URL</label>
                                     <input id="inputAPIURL" placeholder="http://0.0.0.0:5000" value={api_url} onChange={(e) => setapi_url(e.target.value)}></input>
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                    <label htmlFor="inputAnableWebHook">Enable Web Hook</label>
+                                    <input id="inputAnableWebHook" value={enabledWebHook} type="checkbox" onChange={(e) => setEnabledWebHook(e.target.checked)}></input>
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                    <label htmlFor="inputURLWebHook">URL Web Hook</label>
+                                    <input id="inputURLWebHook" placeholder="http://webhook_endpoint_url.app" value={urlWebHook} onChange={(e) => setUrlWebHook(e.target.value)}></input>
                                 </div>
                                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                                     <label htmlFor="inputFrequencyImageRefresh">Frequency Image Refresh</label>
