@@ -408,7 +408,7 @@ export default function CheckIn({ searchParams }) {
             <div style={{ backgroundColor: "gray", paddingLeft: "3rem", padding: "3rem", overflow: "scroll" }}>
                 <h1>Smart Attendance by Face Login</h1>
                 <div style={{ display: "flex", flexDirection: "row", gap: "0.2rem", flexGrow: "1", justifyContent: "space-between" }}>
-                    <fieldset style={{ padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem" }}>
+                    <fieldset style={{ padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem" , backgroundColor: "white"}}>
                         <legend><h1> Instructions</h1></legend>
 
                         <div>
@@ -461,7 +461,7 @@ export default function CheckIn({ searchParams }) {
                         </div>
 
                     </fieldset>
-                    <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
+                    <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "white" }}>
                         <legend><h1> Features</h1></legend>
                         <ol>
                             <li>
@@ -504,9 +504,11 @@ export default function CheckIn({ searchParams }) {
                             <li>
                                 Ability to deal with any king of images others then JPEG, also PNG base64 string
                             </li>
+
+                            
                         </ol>
                     </fieldset>
-                    <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "yellow" }}>
+                    <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "white" }}>
                         <legend><h1> To Do/Road Map</h1></legend>
                         <ol>
 

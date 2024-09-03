@@ -1,4 +1,4 @@
-# sudo docker build  -t "angelocarlotto/face_login_ui:latest" .
+# sudo docker buildx build --platform=linux/arm64,linux/amd64/v2  -t "angelocarlotto/face_login_ui:latest" . --push
 
 #docker push angelocarlotto/face_login_ui:latest
 
