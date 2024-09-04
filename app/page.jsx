@@ -406,9 +406,9 @@ export default function CheckIn({ searchParams }) {
       `}</style>
 
             <div style={{ backgroundColor: "gray", paddingLeft: "3rem", padding: "3rem", overflow: "scroll" }}>
-                <h1>Smart Attendance by Face Login</h1>
+                <h1 style={{color:"black"}}>Smart Attendance by Face Login</h1>
                 <div style={{ display: "flex", flexDirection: "row", gap: "0.2rem", flexGrow: "1", justifyContent: "space-between" }}>
-                    <fieldset style={{ padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem" , backgroundColor: "white"}}>
+                    <fieldset style={{ padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem" , backgroundColor: "white",color:"black"}}>
                         <legend><h1> Instructions</h1></legend>
 
                         <div>

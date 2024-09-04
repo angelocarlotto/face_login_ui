@@ -1,3 +1,3 @@
 export default function Check({  }) {
-    return <></>
+    return <div>i am alive</div>
 }

@@ -17,4 +17,6 @@ RUN  git clone https://github.com/angelocarlotto/face_login_ui.git && cd face_lo
 
 WORKDIR face_login_ui
 
-CMD ["npm","run","dev"]
+RUN npm run build
+
+CMD ["npm","run","start"]
