@@ -177,8 +177,8 @@ export default function CheckIn({ searchParams }) {
             }
             else {
                 const data = await response.json();
-                setstatusSubmition(data.lastRegonizedFaces.length > 0 ? "Sucess on registration" : "Please try Again. Registration not completed.");
-                setListFacesLastRecognized(data.lastRegonizedFaces);
+                setstatusSubmition(data.lastRegonizedFaces.length > 0 ? "Sucess on registration" : "Please try Again. No face detected.");
+                setListFacesLastRecognized(prev => data.lastRegonizedFaces);
                 setDataTable(data.faces_know);
             }
 
@@ -215,10 +215,10 @@ export default function CheckIn({ searchParams }) {
             setstatusSubmition("Done");
             const data = await response.json();
 
-            setListFacesLastRecognized(data.lastRegonizedFaces);
+            setListFacesLastRecognized(prev => data.lastRegonizedFaces);
             setDataTable(data.faces_know);
 
-            setstatusSubmition(data.lastRegonizedFaces.length > 0 ? "Sucess on registration" : "Please try Again. Registration not completed.");
+            setstatusSubmition(data.lastRegonizedFaces.length > 0 ? "Sucess on registration" : "Please try Again. No face detected.");
 
             //console.log(data);
         } catch (error) {
@@ -406,9 +406,9 @@ export default function CheckIn({ searchParams }) {
       `}</style>
 
             <div style={{ backgroundColor: "gray", paddingLeft: "3rem", padding: "3rem", overflow: "scroll" }}>
-                <h1 style={{color:"black"}}>Smart Attendance by Face Login</h1>
+                <h1 style={{ color: "black" }}>Smart Attendance by Face Login</h1>
                 <div style={{ display: "flex", flexDirection: "row", gap: "0.2rem", flexGrow: "1", justifyContent: "space-between" }}>
-                    <fieldset style={{ padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem" , backgroundColor: "white",color:"black"}}>
+                    <fieldset style={{ padding: "2rem", display: "flex", flexDirection: "row", gap: "0.2rem", backgroundColor: "white", color: "black" }}>
                         <legend><h1> Instructions</h1></legend>
 
                         <div>
@@ -458,6 +458,10 @@ export default function CheckIn({ searchParams }) {
                             <div>
                                 <p> <strong>Request/Responses:</strong>{qtdRequestes}/{qtdResponses} </p>
                             </div>
+                            <div>
+                                <label>Source Code: </label>
+                                <a href="https://github.com/angelocarlotto/face_login_ui">https://github.com/angelocarlotto/face_login_ui</a>
+                            </div>
                         </div>
 
                     </fieldset>
@@ -505,7 +509,7 @@ export default function CheckIn({ searchParams }) {
                                 Ability to deal with any king of images others then JPEG, also PNG base64 string
                             </li>
 
-                            
+
                         </ol>
                     </fieldset>
                     <fieldset style={{ minWidth: "20rem", padding: "2rem", color: "black", backgroundColor: "white" }}>
@@ -578,10 +582,10 @@ export default function CheckIn({ searchParams }) {
                                         <button onClick={async () => onClickCheckIn(clientIpAddress, enviromentName, api_url, nameNewFace)} >Register New From Web Cam</button>
                                     </div>
                                     <div>
-                                        <h1>{statusSubmition}</h1>
+                                        <h3>{statusSubmition}</h3>
                                     </div>
                                 </fieldset>
-
+                                <div>{listFacesLastRecognized.length}</div>
                                 {webCamImagePreview && (
                                     <div style={{ position: "relative" }} >
                                         <img
@@ -597,7 +601,7 @@ export default function CheckIn({ searchParams }) {
                                             let objPrincipal = dataTable.find((e) => e.uuid == faceDetected.principal_uuid);
                                             let objectList = dataTable.filter((face) => face.principal_uuid == objPrincipal.uuid);
                                             return (
-                                                objPrincipal && <div
+                                                <div
                                                     key={objPrincipal.uuid}
                                                     className={styles.dynamic_box}
                                                     style={
@@ -611,14 +615,17 @@ export default function CheckIn({ searchParams }) {
 
                                                         }}
                                                 >
-                                                    <span style={{
-                                                        color: "red"
-                                                        , backgroundColor: "white"
-                                                        , position: "relative"
+                                                    <span
+                                                        key={objPrincipal.uuid}
 
-                                                        , fontSize: "0.8rem"
-                                                        , top: -20
-                                                    }}> {objPrincipal.name} - {objectList.reduce((acc, item) => acc + item.qtd, 0)}</span>
+                                                        style={{
+                                                            color: "red"
+                                                            , backgroundColor: "white"
+                                                            , position: "relative"
+
+                                                            , fontSize: "0.8rem"
+                                                            , top: -20
+                                                        }}> {objPrincipal.name} - {objectList.reduce((acc, item) => acc + item.qtd, 0)}</span>
                                                 </div>
                                             );
                                         })}
@@ -639,7 +646,7 @@ export default function CheckIn({ searchParams }) {
                                     <label >vs</label>
                                     <input id="inputDefaultHeigth" type="number" placeholder="any number" value={defaultHigth} onChange={(e) => { setDefaultHigth(Number(e.target.value).toFixed(2)); setDefaultWidth(Number(e.target.value * imageRatio).toFixed(2)) }}></input>
                                 </div>
-                                <div style={{ display: "flex", justifyContent: "space-between", flexGrow: 0, flexShrink:2 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", flexGrow: 0, flexShrink: 2 }}>
                                     <label htmlFor="inputClientID">Client Ip Adress</label>
                                     <input id="inputClientID" readOnly={true} placeholder="0.0.0.0" value={clientIpAddress} onChange={(e) => setClientIpAddress(e.target.value)}></input>
                                 </div>
@@ -687,7 +694,12 @@ export default function CheckIn({ searchParams }) {
                                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                                     <button onClick={() => downloadCSV(clientIpAddress, enviromentName, api_url)}>Download CSV report</button>
                                 </div>
-
+                                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                    <label htmlFor="inputURLk">URL: </label>
+                                    <a target="_blank" href={`http://${window.location.host}?api_url=${api_url}&enviroment_name=${enviromentName}`}>
+                                        {`http://${window.location.host}?api_url=${api_url}&enviroment_name=${enviromentName}`}
+                                    </a>
+                                </div>
                                 <a style={{ display: "flex", flexDirection: "column", style: "underling" }} target="_blank" href={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}>
                                     <Canvas
                                         text={`https://${window.location.host}/selfregister?api_url=${api_url}&enviroment_name=${enviromentName}`}
@@ -787,7 +799,7 @@ export default function CheckIn({ searchParams }) {
                                                 />
                                             </td>
                                             <td>{objectList.reduce((a, b) => a + b.qtd, 0)}</td>
-                                            <td> {resultLatestAndEarliest.latest.toLocaleString()}</td>
+                                            <td> {resultLatestAndEarliest.earliest.toLocaleString()}</td>
                                             <td>{resultLatestAndEarliest.latest.toLocaleString()}</td>
                                             <td>
                                                 {objectList.length == 1 && <select defaultValue={object.principal_uuid} onChange={async (e) => await mergeTwoFaces(e.target.value, object.uuid, clientIpAddress, enviromentName, api_url)}>
