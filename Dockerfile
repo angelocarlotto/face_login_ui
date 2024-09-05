@@ -5,18 +5,21 @@
 #docker run --rm -p 3001:3000 angelocarlotto/face_login_ui:latest
 
 
-FROM ubuntu
+FROM node:22.8-alpine
 
-RUN apt update
+RUN apk update
 
-RUN apt install -y nodejs git git-all npm
+RUN apk add   git 
 
-ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+#ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
 
 RUN  git clone https://github.com/angelocarlotto/face_login_ui.git && cd face_login_ui &&  npm install
 
 WORKDIR face_login_ui
 
-RUN npm run build
+
+RUN node --no-warnings
+RUN node --trace-deprecation 
+RUN npm run build 
 
 CMD ["npm","run","start"]
