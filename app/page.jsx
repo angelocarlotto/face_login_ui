@@ -63,7 +63,11 @@ export default function CheckIn({ searchParams }) {
 
     useEffect(
         () => {
-            navigator.mediaDevices.enumerateDevices().then(handleDevices);
+            try {
+                navigator.mediaDevices.enumerateDevices().then(handleDevices);
+            } catch (e) {
+                alert("Was encountred an error while trying to access your web cam either you must give permition to the browser access the device, or you dont have a web cam or you are not accessing the interface over httpS protocol this is a must have in order to the browser allow you access your devices.")
+            }
         },
         [handleDevices]
     );
@@ -141,14 +145,14 @@ export default function CheckIn({ searchParams }) {
         setDeviceId(e.target.value);
     }
 
-    const onClickCheckIn = async (clientIpAddressAux, enviromentNameAux, apiURLAux) => {
+    const onClickCheckIn = async (clientIpAddressAux, enviromentNameAux, apiURLAux, nameNewFaceAux) => {
         const imageSrc = webcamRef.current.getScreenshot({
             width: defaultWidth,
             height: defaultHigth
         });
 
         setWebCamImagePreview(imageSrc);
-        await recognizeFace(imageSrc, clientIpAddressAux, enviromentNameAux, apiURLAux);
+        await recognizeFace(imageSrc, clientIpAddressAux, enviromentNameAux, apiURLAux, nameNewFaceAux);
     }
 
     const recognizeFace = async (imageSrc = None, clientIpAddressAux, enviromentNameAux, apiURLAux, nameNewFaceAux) => {

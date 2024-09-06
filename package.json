@@ -17,5 +17,11 @@
     "react-dom": "^18",
     "react-router-dom": "^6.26.0",
     "react-webcam": "^7.2.0"
+  },
+  "overrides": {
+    "eslint": {
+      "@humanwhocodes/config-array": "npm:@eslint/config-array",
+      "file-entry-cache": "^8.0.0"
+    }
   }
 }
