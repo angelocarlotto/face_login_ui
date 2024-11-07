@@ -599,7 +599,7 @@ export default function CheckIn({ searchParams }) {
                                             width={defaultWidth}
                                             style={{ backgroundColor: "green" }}
                                         />
-                                        {listFacesLastRecognized.map(({ uuid, location }) => {
+                                        {dataTable.length>0 && listFacesLastRecognized.map(({ uuid, location }) => {
                                             let [top, right, bottom, left] = location;
                                             let faceDetected = dataTable.find((e) => e.uuid == uuid);
                                             let objPrincipal = dataTable.find((e) => e.uuid == faceDetected.principal_uuid);
