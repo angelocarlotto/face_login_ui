@@ -744,7 +744,7 @@ export default function CheckIn({ searchParams }) {
                         </thead>
                         <tbody>
                             {dataTable.length > 0 && (<>{
-                                new Set(dataTable.map(e => e.principal_uuid)).keys().toArray().map((key, i, a) => {
+                                new Set(Array.from(dataTable.map(e => e.principal_uuid))).map((key, i, a) => {
                                     let object = dataTable.find((face) => face.uuid == key);
                                     let objectList = dataTable.filter((face) => face.principal_uuid == key);
 
